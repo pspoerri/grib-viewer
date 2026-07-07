@@ -1,0 +1,186 @@
+/* =====================================================================
+   Typefaces
+   - Archivo Black — the neo-brutalist display voice: headlines, the
+     wordmark, section tags. One weight, all caps, no apologies.
+   - B612 / B612 Mono — Airbus cockpit faces kept for the dense numeric
+     readouts over a moving map. Self-hosted from /public/fonts (no CDN).
+   ===================================================================== */
+@font-face {
+  font-family: "Archivo Black";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/archivo-black.woff2") format("woff2");
+}
+@font-face {
+  font-family: "B612";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/b612-regular.woff2") format("woff2");
+}
+@font-face {
+  font-family: "B612";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/b612-italic.woff2") format("woff2");
+}
+@font-face {
+  font-family: "B612";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/b612-bold.woff2") format("woff2");
+}
+@font-face {
+  font-family: "B612 Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/b612mono-regular.woff2") format("woff2");
+}
+@font-face {
+  font-family: "B612 Mono";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/b612mono-bold.woff2") format("woff2");
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* =====================================================================
+   Design tokens — neo-brutalist field station, night shift.
+   Charcoal slabs, 2px bone borders, hard black offset shadows (no blur,
+   ever), sun-yellow accent with ink text. Opaque and flat throughout.
+   ===================================================================== */
+:root {
+  --sidebar-width: 320px;
+
+  /* --- Surfaces ---------------------------------------------------- */
+  --bg:           #111013;
+  --bg-surface:   #1b1a1e;
+  --bg-surface-2: #242229;
+  --bg-input:     #26242b; /* inputs sit a step LIGHTER than the slab */
+  --bg-hover:     #2f2d35;
+
+  /* Panels are OPAQUE slabs — no glass, no blur. */
+  --panel:        #1b1a1e;
+  --panel-strong: #1b1a1e;
+
+  /* --- Ink (bone on charcoal) --------------------------------------- */
+  --border:        #eae6d9;
+  --border-strong: #eae6d9;
+  /* Legacy bezel slot (kept so shadow lists still parse): no-op. */
+  --bezel: 0 0 0 0 rgba(0, 0, 0, 0);
+  /* Hard shadows stay BLACK even though the ink is bone — slabs cast
+     shadow, they don't glow. */
+  --shadow-ink: #0a0a0a;
+
+  /* --- Text -------------------------------------------------------- */
+  --text:        #f2efe6;
+  --text-soft:   #cfcabb;
+  --text-muted:  #948f80;
+
+  /* --- Accent: sun yellow (ink text on top, always) ----------------- */
+  --accent:        #ffd02e;
+  --accent-strong: #f5b700;
+  --accent-hover:  #ffdd57;
+  --accent-soft:   #453a0e; /* dark-olive tint for accent-washed surfaces */
+  --accent-ink:    #141414;
+  --accent-ring:   #f5b700;
+  --link:          #7db2ff;
+
+  /* --- Secondary block colors --------------------------------------- */
+  --pop-green:  #67e8a9;
+  --danger:     #ff6b47;
+  --warning:    #ffb02e;
+
+  /* --- Radius: corners are a compromise ------------------------------ */
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+
+  /* --- Shadows: hard black offsets, zero blur ------------------------ */
+  --shadow-sm: 2px 2px 0 var(--shadow-ink);
+  --shadow-md: 4px 4px 0 var(--shadow-ink);
+  --shadow-lg: 6px 6px 0 var(--shadow-ink);
+
+  /* --- Typography --------------------------------------------------- */
+  --font: "B612", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "B612 Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+  --display: "Archivo Black", "Arial Black", system-ui, sans-serif;
+
+  font-family: var(--font);
+  font-size: 13.5px;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  height: 100vh;
+  height: 100dvh;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+/* Numeric readouts align like an instrument cluster everywhere. */
+:root {
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Focus ring (shared): a hard ink outline, offset like a shadow --- */
+:where(button, select, input, textarea, [role="button"]):focus-visible {
+  outline: 2px solid var(--border);
+  outline-offset: 2px;
+}
+
+/* --- Reduced motion -------------------------------------------------
+   Kill the chrome-reveal and all decorative transitions for users who
+   asked for it; functional state changes still apply instantly. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* --- Scrollbars: chunky ink blocks ---------------------------------- */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border: 2px solid var(--bg-surface);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--text-soft);
+}

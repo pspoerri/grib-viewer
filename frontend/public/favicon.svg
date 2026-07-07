@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Neo-brutalist tile: charcoal slab, bone border, sun-yellow bolt
+       with a hard ink offset shadow (design tokens from index.css). -->
+  <rect width="64" height="64" fill="#16151a"/>
+  <rect x="3" y="3" width="58" height="58" fill="none" stroke="#eae6d9" stroke-width="4"/>
+  <g stroke-linejoin="miter">
+    <path d="M37 9 L19 37 H30 L26 55 L47 25 H34 L40 9 Z" transform="translate(3,3)" fill="#0a0a0a"/>
+    <path d="M37 9 L19 37 H30 L26 55 L47 25 H34 L40 9 Z" fill="#ffd02e" stroke="#141414" stroke-width="2.5"/>
+  </g>
+</svg>

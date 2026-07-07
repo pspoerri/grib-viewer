@@ -1,0 +1,8 @@
+bin/
+data/
+node_modules/
+frontend/dist/
+*.log
+wetter-api/
+backend/internal/webui/dist/*
+!backend/internal/webui/dist/.gitkeep

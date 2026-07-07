@@ -1,0 +1,15 @@
+import { chromium } from 'playwright-core'
+const [out] = process.argv.slice(2)
+const browser = await chromium.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' })
+const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
+await page.goto('http://localhost:5173/#m=auto&p=temperature&v=8.55,47.37,6', { waitUntil: 'load' })
+await page.waitForTimeout(8000)
+// switch to the Surface topic, then pick the Precipitation phenomenon
+await page.locator('.preset-topic-btn').nth(1).click()
+await page.waitForTimeout(800)
+const strip = await page.locator('.preset-sub-btn').allTextContents()
+console.log('strip:', strip.join(' | '))
+await page.locator('.preset-sub-btn', { hasText: 'Gusts' }).first().click().catch(() => page.locator('.preset-sub-btn').first().click())
+await page.waitForTimeout(6000)
+await page.screenshot({ path: out })
+await browser.close()

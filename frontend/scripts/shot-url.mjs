@@ -1,0 +1,10 @@
+import { chromium } from 'playwright-core'
+const [url, out] = process.argv.slice(2)
+const browser = await chromium.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' })
+const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
+page.on('pageerror', (e) => console.log('[pageerror]', String(e).slice(0, 200)))
+await page.goto(url, { waitUntil: 'load', timeout: 30000 })
+await page.waitForTimeout(9000)
+await page.screenshot({ path: out })
+console.log('saved', out)
+await browser.close()

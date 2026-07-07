@@ -1,0 +1,15 @@
+# podman-compose up -d   (docker compose works identically)
+#
+# Mounts ./wetter.yaml (sources config) and ./data (the GRIB buffer)
+# into the container's workdir, so the config's relative `data_dir:
+# ./data` lands on the host folder. UI + API on http://localhost:8080.
+services:
+  wetter:
+    build: .
+    image: wetter:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+      - ./wetter.yaml:/app/wetter.yaml:ro
+    restart: unless-stopped

@@ -1,0 +1,53 @@
+name: release
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  binaries:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+
+      # build the frontend once and gzip it into the embed dir; every
+      # platform binary below ships it (self-contained: UI served at /)
+      - name: embed frontend
+        run: make embed-frontend
+
+      - name: cross-compile
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          mkdir -p out
+          for target in darwin/arm64 darwin/amd64 linux/amd64 linux/arm64; do
+            GOOS="${target%/*}" GOARCH="${target#*/}"
+            echo "== $GOOS/$GOARCH"
+            ( cd backend && CGO_ENABLED=0 GOOS="$GOOS" GOARCH="$GOARCH" \
+                go build -trimpath -ldflags="-s -w" -o ../out/wetter ./cmd/wetter )
+            tar -czf "out/wetter_${TAG}_${GOOS}_${GOARCH}.tar.gz" \
+                -C out wetter -C .. wetter.yaml README.md
+            rm out/wetter
+          done
+          ls -lh out/
+
+      - name: upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: out/*.tar.gz
+          generate_release_notes: true

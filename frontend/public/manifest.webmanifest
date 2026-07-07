@@ -1,0 +1,12 @@
+{
+  "name": "WETTER-viewer",
+  "short_name": "WETTER",
+  "display": "standalone",
+  "background_color": "#111013",
+  "theme_color": "#111013",
+  "start_url": "/",
+  "icons": [
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/icon_no_bg.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

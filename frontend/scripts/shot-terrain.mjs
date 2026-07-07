@@ -1,0 +1,18 @@
+import { chromium } from 'playwright-core'
+const [url, outA, outB] = process.argv.slice(2)
+const browser = await chromium.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' })
+const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
+page.on('console', (m) => { if (m.type() === 'error') console.log('[console]', m.text().slice(0, 160)) })
+await page.goto(url, { waitUntil: 'load', timeout: 30000 })
+await page.waitForTimeout(9000)
+await page.click('.preset-menu-btn')
+await page.waitForTimeout(800)
+await page.click('.settings-toggle')
+await page.waitForTimeout(500)
+await page.screenshot({ path: outA })
+// the Terrain checkbox is the one inside the View section's checkbox label
+await page.locator('.checkbox-label', { hasText: 'Terrain' }).locator('input').click()
+await page.waitForTimeout(5000)
+await page.screenshot({ path: outB })
+console.log('saved')
+await browser.close()

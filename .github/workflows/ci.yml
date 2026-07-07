@@ -1,0 +1,44 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    # Pure Go: with cgo on, go-tiled-eccodes' decode package requires
+    # libopenjp2 via pkg-config, which the runner doesn't have.
+    env:
+      CGO_ENABLED: "0"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+
+      - name: backend vet + tests
+        run: |
+          cd backend
+          go vet ./...
+          go test ./...
+
+      - name: frontend build + unit tests
+        run: |
+          cd frontend
+          pnpm install --frozen-lockfile
+          pnpm run build
+          pnpm run test:unit
+
+      - name: release build (embedded frontend)
+        run: make release

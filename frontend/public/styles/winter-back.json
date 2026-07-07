@@ -1,0 +1,4974 @@
+{
+  "glyphs": "https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf",
+  "layers": [
+    {
+      "id": "background",
+      "paint": {
+        "background-color": "#c8d5e0"
+      },
+      "type": "background"
+    },
+    {
+      "filter": [
+        "==",
+        "$type",
+        "Polygon"
+      ],
+      "id": "earth",
+      "paint": {
+        "fill-color": "#eaeff4"
+      },
+      "source": "osm-vector",
+      "source-layer": "earth",
+      "type": "fill"
+    },
+    {
+      "id": "landcover",
+      "paint": {
+        "fill-color": [
+          "match",
+          [
+            "get",
+            "kind"
+          ],
+          "grassland",
+          "rgba(210, 220, 228, 1)",
+          "barren",
+          "rgba(230, 235, 240, 1)",
+          "urban_area",
+          "rgba(220, 224, 230, 1)",
+          "farmland",
+          "rgba(215, 222, 230, 1)",
+          "glacier",
+          "rgba(240, 245, 250, 1)",
+          "scrub",
+          "rgba(205, 215, 225, 1)",
+          "rgba(195, 210, 220, 1)"
+        ],
+        "fill-opacity": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          5,
+          1,
+          7,
+          0
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "landcover",
+      "type": "fill"
+    },
+    {
+      "filter": [
+        "in",
+        "kind",
+        "national_park",
+        "park",
+        "cemetery",
+        "protected_area",
+        "nature_reserve",
+        "forest",
+        "golf_course",
+        "wood",
+        "nature_reserve",
+        "forest",
+        "scrub",
+        "grassland",
+        "grass",
+        "military",
+        "naval_base",
+        "airfield"
+      ],
+      "id": "landuse_park",
+      "paint": {
+        "fill-color": [
+          "case",
+          [
+            "in",
+            [
+              "get",
+              "kind"
+            ],
+            [
+              "literal",
+              [
+                "national_park",
+                "park",
+                "cemetery",
+                "protected_area",
+                "nature_reserve",
+                "forest",
+                "golf_course"
+              ]
+            ]
+          ],
+          "#c0cdd8",
+          [
+            "in",
+            [
+              "get",
+              "kind"
+            ],
+            [
+              "literal",
+              [
+                "wood",
+                "nature_reserve",
+                "forest"
+              ]
+            ]
+          ],
+          "#b8c5d0",
+          [
+            "in",
+            [
+              "get",
+              "kind"
+            ],
+            [
+              "literal",
+              [
+                "scrub",
+                "grassland",
+                "grass"
+              ]
+            ]
+          ],
+          "#b8c5d0",
+          [
+            "in",
+            [
+              "get",
+              "kind"
+            ],
+            [
+              "literal",
+              [
+                "glacier"
+              ]
+            ]
+          ],
+          "#f0f5fa",
+          [
+            "in",
+            [
+              "get",
+              "kind"
+            ],
+            [
+              "literal",
+              [
+                "sand"
+              ]
+            ]
+          ],
+          "#dde2e8",
+          [
+            "in",
+            [
+              "get",
+              "kind"
+            ],
+            [
+              "literal",
+              [
+                "military",
+                "naval_base",
+                "airfield"
+              ]
+            ]
+          ],
+          "#c8d4dc",
+          "#eaeff4"
+        ],
+        "fill-opacity": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          6,
+          0,
+          11,
+          1
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "landuse",
+      "type": "fill"
+    },
+    {
+      "filter": [
+        "in",
+        "kind",
+        "allotments",
+        "village_green",
+        "playground"
+      ],
+      "id": "landuse_urban_green",
+      "paint": {
+        "fill-color": "#c0cdd8",
+        "fill-opacity": 0.7
+      },
+      "source": "osm-vector",
+      "source-layer": "landuse",
+      "type": "fill"
+    },
+    {
+      "filter": [
+        "==",
+        "kind",
+        "hospital"
+      ],
+      "id": "landuse_hospital",
+      "paint": {
+        "fill-color": "#e0dde0"
+      },
+      "source": "osm-vector",
+      "source-layer": "landuse",
+      "type": "fill"
+    },
+    {
+      "filter": [
+        "==",
+        "kind",
+        "industrial"
+      ],
+      "id": "landuse_industrial",
+      "paint": {
+        "fill-color": "#d6dce2"
+      },
+      "source": "osm-vector",
+      "source-layer": "landuse",
+      "type": "fill"
+    },
+    {
+      "filter": [
+        "in",
+        "kind",
+        "school",
+        "university",
+        "college"
+      ],
+      "id": "landuse_school",
+      "paint": {
+        "fill-color": "#dddae0"
+      },
+      "source": "osm-vector",
+      "source-layer": "landuse",
+      "type": "fill"
+    },
+    {
+      "filter": [
+        "in",
+        "kind",
+        "beach"
+      ],
+      "id": "landuse_beach",
+      "paint": {
+        "fill-color": "#d8dde4"
+      },
+      "source": "osm-vector",
+      "source-layer": "landuse",
+      "type": "fill"
+    },
+    {
+      "filter": [
+        "in",
+        "kind",
+        "zoo"
+      ],
+      "id": "landuse_zoo",
+      "paint": {
+        "fill-color": "#c8d4dc"
+      },
+      "source": "osm-vector",
+      "source-layer": "landuse",
+      "type": "fill"
+    },
+    {
+      "filter": [
+        "in",
+        "kind",
+        "aerodrome"
+      ],
+      "id": "landuse_aerodrome",
+      "paint": {
+        "fill-color": "#d8dde5"
+      },
+      "source": "osm-vector",
+      "source-layer": "landuse",
+      "type": "fill"
+    },
+    {
+      "filter": [
+        "==",
+        "kind_detail",
+        "runway"
+      ],
+      "id": "roads_runway",
+      "paint": {
+        "line-color": "#c8cfd8",
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          10,
+          0,
+          12,
+          4,
+          18,
+          30
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "==",
+        "kind_detail",
+        "taxiway"
+      ],
+      "id": "roads_taxiway",
+      "minzoom": 13,
+      "paint": {
+        "line-color": "#c8cfd8",
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          0,
+          13.5,
+          1,
+          15,
+          6
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "any",
+        [
+          "in",
+          "kind",
+          "runway",
+          "taxiway"
+        ]
+      ],
+      "id": "landuse_runway",
+      "paint": {
+        "fill-color": "#c8cfd8"
+      },
+      "source": "osm-vector",
+      "source-layer": "landuse",
+      "type": "fill"
+    },
+    {
+      "filter": [
+        "==",
+        "$type",
+        "Polygon"
+      ],
+      "id": "water",
+      "paint": {
+        "fill-color": "#6a9ec0"
+      },
+      "source": "osm-vector",
+      "source-layer": "water",
+      "type": "fill"
+    },
+    {
+      "filter": [
+        "in",
+        "kind",
+        "pedestrian",
+        "dam"
+      ],
+      "id": "landuse_pedestrian",
+      "paint": {
+        "fill-color": "#dfe4e8"
+      },
+      "source": "osm-vector",
+      "source-layer": "landuse",
+      "type": "fill"
+    },
+    {
+      "filter": [
+        "==",
+        "kind",
+        "pier"
+      ],
+      "id": "landuse_pier",
+      "paint": {
+        "fill-color": "#c0c8d0"
+      },
+      "source": "osm-vector",
+      "source-layer": "landuse",
+      "type": "fill"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "has",
+          "is_tunnel"
+        ],
+        [
+          "in",
+          "kind",
+          "other",
+          "path"
+        ]
+      ],
+      "id": "roads_tunnels_other_casing",
+      "paint": {
+        "line-color": "#a0aab5",
+        "line-gap-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          14,
+          0,
+          20,
+          7
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "has",
+          "is_tunnel"
+        ],
+        [
+          "==",
+          "kind",
+          "minor_road"
+        ]
+      ],
+      "id": "roads_tunnels_minor_casing",
+      "paint": {
+        "line-color": "#a0aab5",
+        "line-dasharray": [
+          3,
+          2
+        ],
+        "line-gap-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          11,
+          0,
+          12.5,
+          0.5,
+          15,
+          2,
+          18,
+          11
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          12,
+          0,
+          12.5,
+          1
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "has",
+          "is_tunnel"
+        ],
+        [
+          "has",
+          "is_link"
+        ]
+      ],
+      "id": "roads_tunnels_link_casing",
+      "paint": {
+        "line-color": "#a0aab5",
+        "line-dasharray": [
+          3,
+          2
+        ],
+        "line-gap-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          0,
+          13.5,
+          1,
+          18,
+          11
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          12,
+          0,
+          12.5,
+          1
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "!has",
+          "is_tunnel"
+        ],
+        [
+          "!has",
+          "is_bridge"
+        ],
+        [
+          "==",
+          "kind",
+          "major_road"
+        ]
+      ],
+      "id": "roads_tunnels_major_casing",
+      "paint": {
+        "line-color": "#8896a4",
+        "line-dasharray": [
+          3,
+          2
+        ],
+        "line-gap-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          7,
+          0,
+          7.5,
+          0.5,
+          18,
+          13
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          9,
+          0,
+          9.5,
+          1
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "!has",
+          "is_tunnel"
+        ],
+        [
+          "!has",
+          "is_bridge"
+        ],
+        [
+          "==",
+          "kind",
+          "highway"
+        ],
+        [
+          "!has",
+          "is_link"
+        ]
+      ],
+      "id": "roads_tunnels_highway_casing",
+      "paint": {
+        "line-color": "#7888a0",
+        "line-dasharray": [
+          6,
+          0.5
+        ],
+        "line-gap-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          3,
+          0,
+          3.5,
+          0.5,
+          18,
+          15
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          7,
+          0,
+          7.5,
+          1,
+          20,
+          15
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "has",
+          "is_tunnel"
+        ],
+        [
+          "in",
+          "kind",
+          "other",
+          "path"
+        ]
+      ],
+      "id": "roads_tunnels_other",
+      "paint": {
+        "line-color": "#c8cfd8",
+        "line-dasharray": [
+          4.5,
+          0.5
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          14,
+          0,
+          20,
+          7
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "has",
+          "is_tunnel"
+        ],
+        [
+          "==",
+          "kind",
+          "minor_road"
+        ]
+      ],
+      "id": "roads_tunnels_minor",
+      "paint": {
+        "line-color": "#c8cfd8",
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          11,
+          0,
+          12.5,
+          0.5,
+          15,
+          2,
+          18,
+          11
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "has",
+          "is_tunnel"
+        ],
+        [
+          "has",
+          "is_link"
+        ]
+      ],
+      "id": "roads_tunnels_link",
+      "paint": {
+        "line-color": "#c8cfd8",
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          0,
+          13.5,
+          1,
+          18,
+          11
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "has",
+          "is_tunnel"
+        ],
+        [
+          "==",
+          "kind",
+          "major_road"
+        ]
+      ],
+      "id": "roads_tunnels_major",
+      "paint": {
+        "line-color": "#bcc5d0",
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          6,
+          0,
+          12,
+          1.6,
+          15,
+          3,
+          18,
+          13
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "has",
+          "is_tunnel"
+        ],
+        [
+          "==",
+          [
+            "get",
+            "kind"
+          ],
+          "highway"
+        ],
+        [
+          "!",
+          [
+            "has",
+            "is_link"
+          ]
+        ]
+      ],
+      "id": "roads_tunnels_highway",
+      "paint": {
+        "line-color": "#b0bcc8",
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          3,
+          0,
+          6,
+          1.1,
+          12,
+          1.6,
+          15,
+          5,
+          18,
+          15
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "in",
+        "kind",
+        "building",
+        "building_part"
+      ],
+      "id": "buildings",
+      "paint": {
+        "fill-color": "#c4ccd4",
+        "fill-opacity": 0.5
+      },
+      "source": "osm-vector",
+      "source-layer": "buildings",
+      "type": "fill"
+    },
+    {
+      "filter": [
+        "==",
+        "kind_detail",
+        "pier"
+      ],
+      "id": "roads_pier",
+      "paint": {
+        "line-color": "#c0c8d0",
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          12,
+          0,
+          12.5,
+          0.5,
+          20,
+          16
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "!has",
+          "is_tunnel"
+        ],
+        [
+          "!has",
+          "is_bridge"
+        ],
+        [
+          "==",
+          "kind",
+          "minor_road"
+        ],
+        [
+          "==",
+          "kind_detail",
+          "service"
+        ]
+      ],
+      "id": "roads_minor_service_casing",
+      "minzoom": 13,
+      "paint": {
+        "line-color": "#9aa8b5",
+        "line-gap-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          0,
+          18,
+          8
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          0,
+          13.5,
+          0.8
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "!has",
+          "is_tunnel"
+        ],
+        [
+          "!has",
+          "is_bridge"
+        ],
+        [
+          "==",
+          "kind",
+          "minor_road"
+        ],
+        [
+          "!=",
+          "kind_detail",
+          "service"
+        ]
+      ],
+      "id": "roads_minor_casing",
+      "paint": {
+        "line-color": "#9aa8b5",
+        "line-gap-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          11,
+          0,
+          12.5,
+          0.5,
+          15,
+          2,
+          18,
+          11
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          12,
+          0,
+          12.5,
+          1
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "has",
+        "is_link"
+      ],
+      "id": "roads_link_casing",
+      "minzoom": 13,
+      "paint": {
+        "line-color": "#9aa8b5",
+        "line-gap-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          0,
+          13.5,
+          1,
+          18,
+          11
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          0,
+          13.5,
+          1.5
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "!has",
+          "is_tunnel"
+        ],
+        [
+          "!has",
+          "is_bridge"
+        ],
+        [
+          "==",
+          "kind",
+          "major_road"
+        ]
+      ],
+      "id": "roads_major_casing_late",
+      "minzoom": 12,
+      "paint": {
+        "line-color": "#7080a0",
+        "line-gap-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          6,
+          0,
+          12,
+          1.6,
+          15,
+          3,
+          18,
+          13
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          9,
+          0,
+          9.5,
+          1
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "!has",
+          "is_tunnel"
+        ],
+        [
+          "!has",
+          "is_bridge"
+        ],
+        [
+          "==",
+          "kind",
+          "highway"
+        ],
+        [
+          "!has",
+          "is_link"
+        ]
+      ],
+      "id": "roads_highway_casing_late",
+      "minzoom": 12,
+      "paint": {
+        "line-color": "#5a7090",
+        "line-gap-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          3,
+          0,
+          3.5,
+          0.5,
+          18,
+          15
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          7,
+          0,
+          7.5,
+          1,
+          20,
+          15
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "!has",
+          "is_tunnel"
+        ],
+        [
+          "!has",
+          "is_bridge"
+        ],
+        [
+          "in",
+          "kind",
+          "other",
+          "path"
+        ],
+        [
+          "!=",
+          "kind_detail",
+          "pier"
+        ]
+      ],
+      "id": "roads_other",
+      "paint": {
+        "line-color": "#d8dfe6",
+        "line-dasharray": [
+          3,
+          1
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          14,
+          0,
+          20,
+          7
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "has",
+        "is_link"
+      ],
+      "id": "roads_link",
+      "paint": {
+        "line-color": "#f0f3f6",
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          0,
+          13.5,
+          1,
+          18,
+          11
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "!has",
+          "is_tunnel"
+        ],
+        [
+          "!has",
+          "is_bridge"
+        ],
+        [
+          "==",
+          "kind",
+          "minor_road"
+        ],
+        [
+          "==",
+          "kind_detail",
+          "service"
+        ]
+      ],
+      "id": "roads_minor_service",
+      "paint": {
+        "line-color": "#d8dfe6",
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          0,
+          18,
+          8
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "!has",
+          "is_tunnel"
+        ],
+        [
+          "!has",
+          "is_bridge"
+        ],
+        [
+          "==",
+          "kind",
+          "minor_road"
+        ],
+        [
+          "!=",
+          "kind_detail",
+          "service"
+        ]
+      ],
+      "id": "roads_minor",
+      "paint": {
+        "line-color": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          11,
+          "#e0e6ec",
+          16,
+          "#f0f3f6"
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          11,
+          0,
+          12.5,
+          0.5,
+          15,
+          2,
+          18,
+          11
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "!has",
+          "is_tunnel"
+        ],
+        [
+          "!has",
+          "is_bridge"
+        ],
+        [
+          "==",
+          "kind",
+          "major_road"
+        ]
+      ],
+      "id": "roads_major_casing_early",
+      "maxzoom": 12,
+      "paint": {
+        "line-color": "#7080a0",
+        "line-gap-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          7,
+          0,
+          7.5,
+          0.5,
+          18,
+          13
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          9,
+          0,
+          9.5,
+          1
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "!has",
+          "is_tunnel"
+        ],
+        [
+          "!has",
+          "is_bridge"
+        ],
+        [
+          "==",
+          "kind",
+          "major_road"
+        ]
+      ],
+      "id": "roads_major",
+      "paint": {
+        "line-color": "#f4f6f8",
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          6,
+          0,
+          12,
+          1.6,
+          15,
+          3,
+          18,
+          13
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "!has",
+          "is_tunnel"
+        ],
+        [
+          "!has",
+          "is_bridge"
+        ],
+        [
+          "==",
+          "kind",
+          "highway"
+        ],
+        [
+          "!has",
+          "is_link"
+        ]
+      ],
+      "id": "roads_highway_casing_early",
+      "maxzoom": 12,
+      "paint": {
+        "line-color": "#5a7090",
+        "line-gap-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          3,
+          0,
+          3.5,
+          0.5,
+          18,
+          15
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          7,
+          0,
+          7.5,
+          1
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "!has",
+          "is_tunnel"
+        ],
+        [
+          "!has",
+          "is_bridge"
+        ],
+        [
+          "==",
+          "kind",
+          "highway"
+        ],
+        [
+          "!has",
+          "is_link"
+        ]
+      ],
+      "id": "roads_highway",
+      "paint": {
+        "line-color": "#ffffff",
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          3,
+          0,
+          6,
+          1.1,
+          12,
+          1.6,
+          15,
+          5,
+          18,
+          15
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "==",
+        "kind",
+        "rail"
+      ],
+      "id": "roads_rail",
+      "paint": {
+        "line-color": "#7888a0",
+        "line-dasharray": [
+          0.3,
+          0.75
+        ],
+        "line-opacity": 0.5,
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          3,
+          0,
+          6,
+          0.15,
+          18,
+          9
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "has",
+          "is_bridge"
+        ],
+        [
+          "in",
+          "kind",
+          "other",
+          "path"
+        ]
+      ],
+      "id": "roads_bridges_other_casing",
+      "minzoom": 12,
+      "paint": {
+        "line-color": "#9aa8b5",
+        "line-gap-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          14,
+          0,
+          20,
+          7
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "has",
+          "is_bridge"
+        ],
+        [
+          "has",
+          "is_link"
+        ]
+      ],
+      "id": "roads_bridges_link_casing",
+      "minzoom": 12,
+      "paint": {
+        "line-color": "#9aa8b5",
+        "line-gap-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          0,
+          13.5,
+          1,
+          18,
+          11
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          12,
+          0,
+          12.5,
+          1.5
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "has",
+          "is_bridge"
+        ],
+        [
+          "==",
+          "kind",
+          "minor_road"
+        ]
+      ],
+      "id": "roads_bridges_minor_casing",
+      "minzoom": 12,
+      "paint": {
+        "line-color": "#9aa8b5",
+        "line-gap-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          11,
+          0,
+          12.5,
+          0.5,
+          15,
+          2,
+          18,
+          11
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          0,
+          13.5,
+          0.8
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "has",
+          "is_bridge"
+        ],
+        [
+          "==",
+          "kind",
+          "major_road"
+        ]
+      ],
+      "id": "roads_bridges_major_casing",
+      "minzoom": 12,
+      "paint": {
+        "line-color": "#7080a0",
+        "line-gap-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          7,
+          0,
+          7.5,
+          0.5,
+          18,
+          10
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          9,
+          0,
+          9.5,
+          1.5
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "has",
+          "is_bridge"
+        ],
+        [
+          "in",
+          "kind",
+          "other",
+          "path"
+        ]
+      ],
+      "id": "roads_bridges_other",
+      "minzoom": 12,
+      "paint": {
+        "line-color": "#d8dfe6",
+        "line-dasharray": [
+          2,
+          1
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          14,
+          0,
+          20,
+          7
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "has",
+          "is_bridge"
+        ],
+        [
+          "==",
+          "kind",
+          "minor_road"
+        ]
+      ],
+      "id": "roads_bridges_minor",
+      "minzoom": 12,
+      "paint": {
+        "line-color": "#f0f3f6",
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          11,
+          0,
+          12.5,
+          0.5,
+          15,
+          2,
+          18,
+          11
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "has",
+          "is_bridge"
+        ],
+        [
+          "has",
+          "is_link"
+        ]
+      ],
+      "id": "roads_bridges_link",
+      "minzoom": 12,
+      "paint": {
+        "line-color": "#f0f3f6",
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          0,
+          13.5,
+          1,
+          18,
+          11
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "has",
+          "is_bridge"
+        ],
+        [
+          "==",
+          "kind",
+          "major_road"
+        ]
+      ],
+      "id": "roads_bridges_major",
+      "minzoom": 12,
+      "paint": {
+        "line-color": "#f4f6f8",
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          6,
+          0,
+          12,
+          1.6,
+          15,
+          3,
+          18,
+          13
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "has",
+          "is_bridge"
+        ],
+        [
+          "==",
+          "kind",
+          "highway"
+        ],
+        [
+          "!has",
+          "is_link"
+        ]
+      ],
+      "id": "roads_bridges_highway_casing",
+      "minzoom": 12,
+      "paint": {
+        "line-color": "#5a7090",
+        "line-gap-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          3,
+          0,
+          3.5,
+          0.5,
+          18,
+          15
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          7,
+          0,
+          7.5,
+          1,
+          20,
+          15
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "has",
+          "is_bridge"
+        ],
+        [
+          "==",
+          "kind",
+          "highway"
+        ],
+        [
+          "!has",
+          "is_link"
+        ]
+      ],
+      "id": "roads_bridges_highway",
+      "paint": {
+        "line-color": "#ffffff",
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          3,
+          0,
+          6,
+          1.1,
+          12,
+          1.6,
+          15,
+          5,
+          18,
+          15
+        ]
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "==",
+        "kind",
+        "address"
+      ],
+      "id": "address_label",
+      "layout": {
+        "symbol-placement": "point",
+        "text-field": [
+          "get",
+          "addr_housenumber"
+        ],
+        "text-font": [
+          "Noto Sans Italic"
+        ],
+        "text-size": 10.2
+      },
+      "minzoom": 18,
+      "paint": {
+        "text-color": "#607080",
+        "text-halo-color": "#eaeff4",
+        "text-halo-width": 1
+      },
+      "source": "osm-vector",
+      "source-layer": "buildings",
+      "type": "symbol"
+    },
+    {
+      "filter": [
+        "in",
+        "kind",
+        "river",
+        "stream"
+      ],
+      "id": "water_waterway_label",
+      "layout": {
+        "symbol-placement": "line",
+        "text-field": [
+          "case",
+          [
+            "all",
+            [
+              "any",
+              [
+                "has",
+                "name"
+              ],
+              [
+                "has",
+                "pgf:name"
+              ]
+            ],
+            [
+              "!",
+              [
+                "any",
+                [
+                  "has",
+                  "name2"
+                ],
+                [
+                  "has",
+                  "pgf:name2"
+                ]
+              ]
+            ],
+            [
+              "!",
+              [
+                "any",
+                [
+                  "has",
+                  "name3"
+                ],
+                [
+                  "has",
+                  "pgf:name3"
+                ]
+              ]
+            ]
+          ],
+          [
+            "case",
+            [
+              "has",
+              "script"
+            ],
+            [
+              "case",
+              [
+                "any",
+                [
+                  "is-supported-script",
+                  [
+                    "get",
+                    "name"
+                  ]
+                ],
+                [
+                  "has",
+                  "pgf:name"
+                ]
+              ],
+              [
+                "format",
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "name:en"
+                  ],
+                  [
+                    "get",
+                    "name:en"
+                  ]
+                ],
+                {},
+                "\n",
+                {},
+                [
+                  "case",
+                  [
+                    "all",
+                    [
+                      "!",
+                      [
+                        "has",
+                        "name:en"
+                      ]
+                    ],
+                    [
+                      "has",
+                      "name:en"
+                    ],
+                    [
+                      "!",
+                      [
+                        "has",
+                        "script"
+                      ]
+                    ]
+                  ],
+                  "",
+                  [
+                    "coalesce",
+                    [
+                      "get",
+                      "pgf:name"
+                    ],
+                    [
+                      "get",
+                      "name"
+                    ]
+                  ]
+                ],
+                {
+                  "text-font": [
+                    "case",
+                    [
+                      "==",
+                      [
+                        "get",
+                        "script"
+                      ],
+                      "Devanagari"
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Devanagari Regular v1"
+                      ]
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Regular"
+                      ]
+                    ]
+                  ]
+                }
+              ],
+              [
+                "get",
+                "name:en"
+              ]
+            ],
+            [
+              "format",
+              [
+                "coalesce",
+                [
+                  "get",
+                  "name:en"
+                ],
+                [
+                  "get",
+                  "pgf:name"
+                ],
+                [
+                  "get",
+                  "name"
+                ]
+              ],
+              {}
+            ]
+          ],
+          [
+            "all",
+            [
+              "any",
+              [
+                "has",
+                "name"
+              ],
+              [
+                "has",
+                "pgf:name"
+              ]
+            ],
+            [
+              "any",
+              [
+                "has",
+                "name2"
+              ],
+              [
+                "has",
+                "pgf:name2"
+              ]
+            ],
+            [
+              "!",
+              [
+                "any",
+                [
+                  "has",
+                  "name3"
+                ],
+                [
+                  "has",
+                  "pgf:name3"
+                ]
+              ]
+            ]
+          ],
+          [
+            "case",
+            [
+              "all",
+              [
+                "has",
+                "script"
+              ],
+              [
+                "has",
+                "script2"
+              ]
+            ],
+            [
+              "format",
+              [
+                "get",
+                "name:en"
+              ],
+              {},
+              "\n",
+              {},
+              [
+                "coalesce",
+                [
+                  "get",
+                  "pgf:name"
+                ],
+                [
+                  "get",
+                  "name"
+                ]
+              ],
+              {
+                "text-font": [
+                  "case",
+                  [
+                    "==",
+                    [
+                      "get",
+                      "script"
+                    ],
+                    "Devanagari"
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Devanagari Regular v1"
+                    ]
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Regular"
+                    ]
+                  ]
+                ]
+              },
+              "\n",
+              {},
+              [
+                "coalesce",
+                [
+                  "get",
+                  "pgf:name2"
+                ],
+                [
+                  "get",
+                  "name2"
+                ]
+              ],
+              {
+                "text-font": [
+                  "case",
+                  [
+                    "==",
+                    [
+                      "get",
+                      "script2"
+                    ],
+                    "Devanagari"
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Devanagari Regular v1"
+                    ]
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Regular"
+                    ]
+                  ]
+                ]
+              }
+            ],
+            [
+              "case",
+              [
+                "has",
+                "script2"
+              ],
+              [
+                "format",
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "name:en"
+                  ],
+                  [
+                    "get",
+                    "pgf:name"
+                  ],
+                  [
+                    "get",
+                    "name"
+                  ]
+                ],
+                {},
+                "\n",
+                {},
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "pgf:name2"
+                  ],
+                  [
+                    "get",
+                    "name2"
+                  ]
+                ],
+                {
+                  "text-font": [
+                    "case",
+                    [
+                      "==",
+                      [
+                        "get",
+                        "script2"
+                      ],
+                      "Devanagari"
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Devanagari Regular v1"
+                      ]
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Regular"
+                      ]
+                    ]
+                  ]
+                }
+              ],
+              [
+                "format",
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "name:en"
+                  ],
+                  [
+                    "get",
+                    "pgf:name2"
+                  ],
+                  [
+                    "get",
+                    "name2"
+                  ]
+                ],
+                {},
+                "\n",
+                {},
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "pgf:name"
+                  ],
+                  [
+                    "get",
+                    "name"
+                  ]
+                ],
+                {
+                  "text-font": [
+                    "case",
+                    [
+                      "==",
+                      [
+                        "get",
+                        "script"
+                      ],
+                      "Devanagari"
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Devanagari Regular v1"
+                      ]
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Regular"
+                      ]
+                    ]
+                  ]
+                }
+              ]
+            ]
+          ],
+          [
+            "case",
+            [
+              "all",
+              [
+                "has",
+                "script"
+              ],
+              [
+                "has",
+                "script2"
+              ],
+              [
+                "has",
+                "script3"
+              ]
+            ],
+            [
+              "format",
+              [
+                "get",
+                "name:en"
+              ],
+              {},
+              "\n",
+              {},
+              [
+                "coalesce",
+                [
+                  "get",
+                  "pgf:name"
+                ],
+                [
+                  "get",
+                  "name"
+                ]
+              ],
+              {
+                "text-font": [
+                  "case",
+                  [
+                    "==",
+                    [
+                      "get",
+                      "script"
+                    ],
+                    "Devanagari"
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Devanagari Regular v1"
+                    ]
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Regular"
+                    ]
+                  ]
+                ]
+              },
+              "\n",
+              {},
+              [
+                "coalesce",
+                [
+                  "get",
+                  "pgf:name2"
+                ],
+                [
+                  "get",
+                  "name2"
+                ]
+              ],
+              {
+                "text-font": [
+                  "case",
+                  [
+                    "==",
+                    [
+                      "get",
+                      "script2"
+                    ],
+                    "Devanagari"
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Devanagari Regular v1"
+                    ]
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Regular"
+                    ]
+                  ]
+                ]
+              },
+              "\n",
+              {},
+              [
+                "coalesce",
+                [
+                  "get",
+                  "pgf:name3"
+                ],
+                [
+                  "get",
+                  "name3"
+                ]
+              ],
+              {
+                "text-font": [
+                  "case",
+                  [
+                    "==",
+                    [
+                      "get",
+                      "script3"
+                    ],
+                    "Devanagari"
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Devanagari Regular v1"
+                    ]
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Regular"
+                    ]
+                  ]
+                ]
+              }
+            ],
+            [
+              "case",
+              [
+                "!",
+                [
+                  "has",
+                  "script"
+                ]
+              ],
+              [
+                "format",
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "name:en"
+                  ],
+                  [
+                    "get",
+                    "pgf:name"
+                  ],
+                  [
+                    "get",
+                    "name"
+                  ]
+                ],
+                {},
+                "\n",
+                {},
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "pgf:name2"
+                  ],
+                  [
+                    "get",
+                    "name2"
+                  ]
+                ],
+                {
+                  "text-font": [
+                    "case",
+                    [
+                      "==",
+                      [
+                        "get",
+                        "script2"
+                      ],
+                      "Devanagari"
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Devanagari Regular v1"
+                      ]
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Regular"
+                      ]
+                    ]
+                  ]
+                },
+                "\n",
+                {},
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "pgf:name3"
+                  ],
+                  [
+                    "get",
+                    "name3"
+                  ]
+                ],
+                {
+                  "text-font": [
+                    "case",
+                    [
+                      "==",
+                      [
+                        "get",
+                        "script3"
+                      ],
+                      "Devanagari"
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Devanagari Regular v1"
+                      ]
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Regular"
+                      ]
+                    ]
+                  ]
+                }
+              ],
+              [
+                "!",
+                [
+                  "has",
+                  "script2"
+                ]
+              ],
+              [
+                "format",
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "name:en"
+                  ],
+                  [
+                    "get",
+                    "pgf:name2"
+                  ],
+                  [
+                    "get",
+                    "name2"
+                  ]
+                ],
+                {},
+                "\n",
+                {},
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "pgf:name"
+                  ],
+                  [
+                    "get",
+                    "name"
+                  ]
+                ],
+                {
+                  "text-font": [
+                    "case",
+                    [
+                      "==",
+                      [
+                        "get",
+                        "script"
+                      ],
+                      "Devanagari"
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Devanagari Regular v1"
+                      ]
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Regular"
+                      ]
+                    ]
+                  ]
+                },
+                "\n",
+                {},
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "pgf:name3"
+                  ],
+                  [
+                    "get",
+                    "name3"
+                  ]
+                ],
+                {
+                  "text-font": [
+                    "case",
+                    [
+                      "==",
+                      [
+                        "get",
+                        "script3"
+                      ],
+                      "Devanagari"
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Devanagari Regular v1"
+                      ]
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Regular"
+                      ]
+                    ]
+                  ]
+                }
+              ],
+              [
+                "format",
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "name:en"
+                  ],
+                  [
+                    "get",
+                    "pgf:name3"
+                  ],
+                  [
+                    "get",
+                    "name3"
+                  ]
+                ],
+                {},
+                "\n",
+                {},
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "pgf:name"
+                  ],
+                  [
+                    "get",
+                    "name"
+                  ]
+                ],
+                {
+                  "text-font": [
+                    "case",
+                    [
+                      "==",
+                      [
+                        "get",
+                        "script"
+                      ],
+                      "Devanagari"
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Devanagari Regular v1"
+                      ]
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Regular"
+                      ]
+                    ]
+                  ]
+                },
+                "\n",
+                {},
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "pgf:name2"
+                  ],
+                  [
+                    "get",
+                    "name2"
+                  ]
+                ],
+                {
+                  "text-font": [
+                    "case",
+                    [
+                      "==",
+                      [
+                        "get",
+                        "script2"
+                      ],
+                      "Devanagari"
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Devanagari Regular v1"
+                      ]
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Regular"
+                      ]
+                    ]
+                  ]
+                }
+              ]
+            ]
+          ]
+        ],
+        "text-font": [
+          "Noto Sans Italic"
+        ],
+        "text-letter-spacing": 0.2,
+        "text-size": 10.2
+      },
+      "minzoom": 13,
+      "paint": {
+        "text-color": "#4a7a9e",
+        "text-halo-color": "#6a9ec0",
+        "text-halo-width": 1
+      },
+      "source": "osm-vector",
+      "source-layer": "water",
+      "type": "symbol"
+    },
+    {
+      "filter": [
+        "==",
+        [
+          "get",
+          "oneway"
+        ],
+        "yes"
+      ],
+      "id": "roads_oneway",
+      "layout": {
+        "icon-image": "arrow",
+        "icon-rotate": 90,
+        "symbol-placement": "line",
+        "symbol-spacing": 100
+      },
+      "minzoom": 16,
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "symbol"
+    },
+    {
+      "filter": [
+        "in",
+        "kind",
+        "minor_road",
+        "other",
+        "path"
+      ],
+      "id": "roads_labels_minor",
+      "layout": {
+        "symbol-placement": "line",
+        "symbol-sort-key": [
+          "get",
+          "min_zoom"
+        ],
+        "text-field": [
+          "case",
+          [
+            "all",
+            [
+              "any",
+              [
+                "has",
+                "name"
+              ],
+              [
+                "has",
+                "pgf:name"
+              ]
+            ],
+            [
+              "!",
+              [
+                "any",
+                [
+                  "has",
+                  "name2"
+                ],
+                [
+                  "has",
+                  "pgf:name2"
+                ]
+              ]
+            ],
+            [
+              "!",
+              [
+                "any",
+                [
+                  "has",
+                  "name3"
+                ],
+                [
+                  "has",
+                  "pgf:name3"
+                ]
+              ]
+            ]
+          ],
+          [
+            "case",
+            [
+              "has",
+              "script"
+            ],
+            [
+              "case",
+              [
+                "any",
+                [
+                  "is-supported-script",
+                  [
+                    "get",
+                    "name"
+                  ]
+                ],
+                [
+                  "has",
+                  "pgf:name"
+                ]
+              ],
+              [
+                "format",
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "name:en"
+                  ],
+                  [
+                    "get",
+                    "name:en"
+                  ]
+                ],
+                {},
+                "\n",
+                {},
+                [
+                  "case",
+                  [
+                    "all",
+                    [
+                      "!",
+                      [
+                        "has",
+                        "name:en"
+                      ]
+                    ],
+                    [
+                      "has",
+                      "name:en"
+                    ],
+                    [
+                      "!",
+                      [
+                        "has",
+                        "script"
+                      ]
+                    ]
+                  ],
+                  "",
+                  [
+                    "coalesce",
+                    [
+                      "get",
+                      "pgf:name"
+                    ],
+                    [
+                      "get",
+                      "name"
+                    ]
+                  ]
+                ],
+                {
+                  "text-font": [
+                    "case",
+                    [
+                      "==",
+                      [
+                        "get",
+                        "script"
+                      ],
+                      "Devanagari"
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Devanagari Regular v1"
+                      ]
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Regular"
+                      ]
+                    ]
+                  ]
+                }
+              ],
+              [
+                "get",
+                "name:en"
+              ]
+            ],
+            [
+              "format",
+              [
+                "coalesce",
+                [
+                  "get",
+                  "name:en"
+                ],
+                [
+                  "get",
+                  "pgf:name"
+                ],
+                [
+                  "get",
+                  "name"
+                ]
+              ],
+              {}
+            ]
+          ],
+          [
+            "all",
+            [
+              "any",
+              [
+                "has",
+                "name"
+              ],
+              [
+                "has",
+                "pgf:name"
+              ]
+            ],
+            [
+              "any",
+              [
+                "has",
+                "name2"
+              ],
+              [
+                "has",
+                "pgf:name2"
+              ]
+            ],
+            [
+              "!",
+              [
+                "any",
+                [
+                  "has",
+                  "name3"
+                ],
+                [
+                  "has",
+                  "pgf:name3"
+                ]
+              ]
+            ]
+          ],
+          [
+            "case",
+            [
+              "all",
+              [
+                "has",
+                "script"
+              ],
+              [
+                "has",
+                "script2"
+              ]
+            ],
+            [
+              "format",
+              [
+                "get",
+                "name:en"
+              ],
+              {},
+              "\n",
+              {},
+              [
+                "coalesce",
+                [
+                  "get",
+                  "pgf:name"
+                ],
+                [
+                  "get",
+                  "name"
+                ]
+              ],
+              {
+                "text-font": [
+                  "case",
+                  [
+                    "==",
+                    [
+                      "get",
+                      "script"
+                    ],
+                    "Devanagari"
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Devanagari Regular v1"
+                    ]
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Regular"
+                    ]
+                  ]
+                ]
+              },
+              "\n",
+              {},
+              [
+                "coalesce",
+                [
+                  "get",
+                  "pgf:name2"
+                ],
+                [
+                  "get",
+                  "name2"
+                ]
+              ],
+              {
+                "text-font": [
+                  "case",
+                  [
+                    "==",
+                    [
+                      "get",
+                      "script2"
+                    ],
+                    "Devanagari"
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Devanagari Regular v1"
+                    ]
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Regular"
+                    ]
+                  ]
+                ]
+              }
+            ],
+            [
+              "case",
+              [
+                "has",
+                "script2"
+              ],
+              [
+                "format",
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "name:en"
+                  ],
+                  [
+                    "get",
+                    "pgf:name"
+                  ],
+                  [
+                    "get",
+                    "name"
+                  ]
+                ],
+                {},
+                "\n",
+                {},
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "pgf:name2"
+                  ],
+                  [
+                    "get",
+                    "name2"
+                  ]
+                ],
+                {
+                  "text-font": [
+                    "case",
+                    [
+                      "==",
+                      [
+                        "get",
+                        "script2"
+                      ],
+                      "Devanagari"
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Devanagari Regular v1"
+                      ]
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Regular"
+                      ]
+                    ]
+                  ]
+                }
+              ],
+              [
+                "format",
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "name:en"
+                  ],
+                  [
+                    "get",
+                    "pgf:name2"
+                  ],
+                  [
+                    "get",
+                    "name2"
+                  ]
+                ],
+                {},
+                "\n",
+                {},
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "pgf:name"
+                  ],
+                  [
+                    "get",
+                    "name"
+                  ]
+                ],
+                {
+                  "text-font": [
+                    "case",
+                    [
+                      "==",
+                      [
+                        "get",
+                        "script"
+                      ],
+                      "Devanagari"
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Devanagari Regular v1"
+                      ]
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Regular"
+                      ]
+                    ]
+                  ]
+                }
+              ]
+            ]
+          ],
+          [
+            "case",
+            [
+              "all",
+              [
+                "has",
+                "script"
+              ],
+              [
+                "has",
+                "script2"
+              ],
+              [
+                "has",
+                "script3"
+              ]
+            ],
+            [
+              "format",
+              [
+                "get",
+                "name:en"
+              ],
+              {},
+              "\n",
+              {},
+              [
+                "coalesce",
+                [
+                  "get",
+                  "pgf:name"
+                ],
+                [
+                  "get",
+                  "name"
+                ]
+              ],
+              {
+                "text-font": [
+                  "case",
+                  [
+                    "==",
+                    [
+                      "get",
+                      "script"
+                    ],
+                    "Devanagari"
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Devanagari Regular v1"
+                    ]
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Regular"
+                    ]
+                  ]
+                ]
+              },
+              "\n",
+              {},
+              [
+                "coalesce",
+                [
+                  "get",
+                  "pgf:name2"
+                ],
+                [
+                  "get",
+                  "name2"
+                ]
+              ],
+              {
+                "text-font": [
+                  "case",
+                  [
+                    "==",
+                    [
+                      "get",
+                      "script2"
+                    ],
+                    "Devanagari"
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Devanagari Regular v1"
+                    ]
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Regular"
+                    ]
+                  ]
+                ]
+              },
+              "\n",
+              {},
+              [
+                "coalesce",
+                [
+                  "get",
+                  "pgf:name3"
+                ],
+                [
+                  "get",
+                  "name3"
+                ]
+              ],
+              {
+                "text-font": [
+                  "case",
+                  [
+                    "==",
+                    [
+                      "get",
+                      "script3"
+                    ],
+                    "Devanagari"
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Devanagari Regular v1"
+                    ]
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Regular"
+                    ]
+                  ]
+                ]
+              }
+            ],
+            [
+              "case",
+              [
+                "!",
+                [
+                  "has",
+                  "script"
+                ]
+              ],
+              [
+                "format",
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "name:en"
+                  ],
+                  [
+                    "get",
+                    "pgf:name"
+                  ],
+                  [
+                    "get",
+                    "name"
+                  ]
+                ],
+                {},
+                "\n",
+                {},
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "pgf:name2"
+                  ],
+                  [
+                    "get",
+                    "name2"
+                  ]
+                ],
+                {
+                  "text-font": [
+                    "case",
+                    [
+                      "==",
+                      [
+                        "get",
+                        "script2"
+                      ],
+                      "Devanagari"
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Devanagari Regular v1"
+                      ]
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Regular"
+                      ]
+                    ]
+                  ]
+                },
+                "\n",
+                {},
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "pgf:name3"
+                  ],
+                  [
+                    "get",
+                    "name3"
+                  ]
+                ],
+                {
+                  "text-font": [
+                    "case",
+                    [
+                      "==",
+                      [
+                        "get",
+                        "script3"
+                      ],
+                      "Devanagari"
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Devanagari Regular v1"
+                      ]
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Regular"
+                      ]
+                    ]
+                  ]
+                }
+              ],
+              [
+                "!",
+                [
+                  "has",
+                  "script2"
+                ]
+              ],
+              [
+                "format",
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "name:en"
+                  ],
+                  [
+                    "get",
+                    "pgf:name2"
+                  ],
+                  [
+                    "get",
+                    "name2"
+                  ]
+                ],
+                {},
+                "\n",
+                {},
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "pgf:name"
+                  ],
+                  [
+                    "get",
+                    "name"
+                  ]
+                ],
+                {
+                  "text-font": [
+                    "case",
+                    [
+                      "==",
+                      [
+                        "get",
+                        "script"
+                      ],
+                      "Devanagari"
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Devanagari Regular v1"
+                      ]
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Regular"
+                      ]
+                    ]
+                  ]
+                },
+                "\n",
+                {},
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "pgf:name3"
+                  ],
+                  [
+                    "get",
+                    "name3"
+                  ]
+                ],
+                {
+                  "text-font": [
+                    "case",
+                    [
+                      "==",
+                      [
+                        "get",
+                        "script3"
+                      ],
+                      "Devanagari"
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Devanagari Regular v1"
+                      ]
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Regular"
+                      ]
+                    ]
+                  ]
+                }
+              ],
+              [
+                "format",
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "name:en"
+                  ],
+                  [
+                    "get",
+                    "pgf:name3"
+                  ],
+                  [
+                    "get",
+                    "name3"
+                  ]
+                ],
+                {},
+                "\n",
+                {},
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "pgf:name"
+                  ],
+                  [
+                    "get",
+                    "name"
+                  ]
+                ],
+                {
+                  "text-font": [
+                    "case",
+                    [
+                      "==",
+                      [
+                        "get",
+                        "script"
+                      ],
+                      "Devanagari"
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Devanagari Regular v1"
+                      ]
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Regular"
+                      ]
+                    ]
+                  ]
+                },
+                "\n",
+                {},
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "pgf:name2"
+                  ],
+                  [
+                    "get",
+                    "name2"
+                  ]
+                ],
+                {
+                  "text-font": [
+                    "case",
+                    [
+                      "==",
+                      [
+                        "get",
+                        "script2"
+                      ],
+                      "Devanagari"
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Devanagari Regular v1"
+                      ]
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Regular"
+                      ]
+                    ]
+                  ]
+                }
+              ]
+            ]
+          ]
+        ],
+        "text-font": [
+          "Noto Sans Regular"
+        ],
+        "text-size": 10.2
+      },
+      "minzoom": 15,
+      "paint": {
+        "text-color": "#607080",
+        "text-halo-color": "#eaeff4",
+        "text-halo-width": 1
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "symbol"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "in",
+          [
+            "get",
+            "kind"
+          ],
+          [
+            "literal",
+            [
+              "highway",
+              "major_road"
+            ]
+          ]
+        ],
+        [
+          "has",
+          "shield_text"
+        ],
+        [
+          "<=",
+          [
+            "length",
+            [
+              "get",
+              "shield_text"
+            ]
+          ],
+          5
+        ]
+      ],
+      "id": "roads_shields",
+      "layout": {
+        "icon-image": [
+          "match",
+          [
+            "get",
+            "network"
+          ],
+          "US:I",
+          [
+            "concat",
+            "US:I-",
+            [
+              "length",
+              [
+                "get",
+                "shield_text"
+              ]
+            ],
+            "char"
+          ],
+          "NL:S-road",
+          [
+            "concat",
+            "NL:S-road-",
+            [
+              "length",
+              [
+                "get",
+                "shield_text"
+              ]
+            ],
+            "char"
+          ],
+          [
+            "concat",
+            "generic_shield-",
+            [
+              "length",
+              [
+                "get",
+                "shield_text"
+              ]
+            ],
+            "char"
+          ]
+        ],
+        "icon-rotation-alignment": "viewport",
+        "icon-size": 0.68,
+        "symbol-placement": "line",
+        "text-field": [
+          "get",
+          "shield_text"
+        ],
+        "text-font": [
+          "Noto Sans Medium"
+        ],
+        "text-rotation-alignment": "viewport",
+        "text-size": 6.8
+      },
+      "paint": {
+        "text-color": "#4a5a70"
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "symbol"
+    },
+    {
+      "filter": [
+        "in",
+        "kind",
+        "highway",
+        "major_road"
+      ],
+      "id": "roads_labels_major",
+      "layout": {
+        "symbol-placement": "line",
+        "symbol-sort-key": [
+          "get",
+          "min_zoom"
+        ],
+        "text-field": [
+          "case",
+          [
+            "all",
+            [
+              "any",
+              [
+                "has",
+                "name"
+              ],
+              [
+                "has",
+                "pgf:name"
+              ]
+            ],
+            [
+              "!",
+              [
+                "any",
+                [
+                  "has",
+                  "name2"
+                ],
+                [
+                  "has",
+                  "pgf:name2"
+                ]
+              ]
+            ],
+            [
+              "!",
+              [
+                "any",
+                [
+                  "has",
+                  "name3"
+                ],
+                [
+                  "has",
+                  "pgf:name3"
+                ]
+              ]
+            ]
+          ],
+          [
+            "case",
+            [
+              "has",
+              "script"
+            ],
+            [
+              "case",
+              [
+                "any",
+                [
+                  "is-supported-script",
+                  [
+                    "get",
+                    "name"
+                  ]
+                ],
+                [
+                  "has",
+                  "pgf:name"
+                ]
+              ],
+              [
+                "format",
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "name:en"
+                  ],
+                  [
+                    "get",
+                    "name:en"
+                  ]
+                ],
+                {},
+                "\n",
+                {},
+                [
+                  "case",
+                  [
+                    "all",
+                    [
+                      "!",
+                      [
+                        "has",
+                        "name:en"
+                      ]
+                    ],
+                    [
+                      "has",
+                      "name:en"
+                    ],
+                    [
+                      "!",
+                      [
+                        "has",
+                        "script"
+                      ]
+                    ]
+                  ],
+                  "",
+                  [
+                    "coalesce",
+                    [
+                      "get",
+                      "pgf:name"
+                    ],
+                    [
+                      "get",
+                      "name"
+                    ]
+                  ]
+                ],
+                {
+                  "text-font": [
+                    "case",
+                    [
+                      "==",
+                      [
+                        "get",
+                        "script"
+                      ],
+                      "Devanagari"
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Devanagari Regular v1"
+                      ]
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Regular"
+                      ]
+                    ]
+                  ]
+                }
+              ],
+              [
+                "get",
+                "name:en"
+              ]
+            ],
+            [
+              "format",
+              [
+                "coalesce",
+                [
+                  "get",
+                  "name:en"
+                ],
+                [
+                  "get",
+                  "pgf:name"
+                ],
+                [
+                  "get",
+                  "name"
+                ]
+              ],
+              {}
+            ]
+          ],
+          [
+            "all",
+            [
+              "any",
+              [
+                "has",
+                "name"
+              ],
+              [
+                "has",
+                "pgf:name"
+              ]
+            ],
+            [
+              "any",
+              [
+                "has",
+                "name2"
+              ],
+              [
+                "has",
+                "pgf:name2"
+              ]
+            ],
+            [
+              "!",
+              [
+                "any",
+                [
+                  "has",
+                  "name3"
+                ],
+                [
+                  "has",
+                  "pgf:name3"
+                ]
+              ]
+            ]
+          ],
+          [
+            "case",
+            [
+              "all",
+              [
+                "has",
+                "script"
+              ],
+              [
+                "has",
+                "script2"
+              ]
+            ],
+            [
+              "format",
+              [
+                "get",
+                "name:en"
+              ],
+              {},
+              "\n",
+              {},
+              [
+                "coalesce",
+                [
+                  "get",
+                  "pgf:name"
+                ],
+                [
+                  "get",
+                  "name"
+                ]
+              ],
+              {
+                "text-font": [
+                  "case",
+                  [
+                    "==",
+                    [
+                      "get",
+                      "script"
+                    ],
+                    "Devanagari"
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Devanagari Regular v1"
+                    ]
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Regular"
+                    ]
+                  ]
+                ]
+              },
+              "\n",
+              {},
+              [
+                "coalesce",
+                [
+                  "get",
+                  "pgf:name2"
+                ],
+                [
+                  "get",
+                  "name2"
+                ]
+              ],
+              {
+                "text-font": [
+                  "case",
+                  [
+                    "==",
+                    [
+                      "get",
+                      "script2"
+                    ],
+                    "Devanagari"
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Devanagari Regular v1"
+                    ]
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Regular"
+                    ]
+                  ]
+                ]
+              }
+            ],
+            [
+              "case",
+              [
+                "has",
+                "script2"
+              ],
+              [
+                "format",
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "name:en"
+                  ],
+                  [
+                    "get",
+                    "pgf:name"
+                  ],
+                  [
+                    "get",
+                    "name"
+                  ]
+                ],
+                {},
+                "\n",
+                {},
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "pgf:name2"
+                  ],
+                  [
+                    "get",
+                    "name2"
+                  ]
+                ],
+                {
+                  "text-font": [
+                    "case",
+                    [
+                      "==",
+                      [
+                        "get",
+                        "script2"
+                      ],
+                      "Devanagari"
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Devanagari Regular v1"
+                      ]
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Regular"
+                      ]
+                    ]
+                  ]
+                }
+              ],
+              [
+                "format",
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "name:en"
+                  ],
+                  [
+                    "get",
+                    "pgf:name2"
+                  ],
+                  [
+                    "get",
+                    "name2"
+                  ]
+                ],
+                {},
+                "\n",
+                {},
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "pgf:name"
+                  ],
+                  [
+                    "get",
+                    "name"
+                  ]
+                ],
+                {
+                  "text-font": [
+                    "case",
+                    [
+                      "==",
+                      [
+                        "get",
+                        "script"
+                      ],
+                      "Devanagari"
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Devanagari Regular v1"
+                      ]
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Regular"
+                      ]
+                    ]
+                  ]
+                }
+              ]
+            ]
+          ],
+          [
+            "case",
+            [
+              "all",
+              [
+                "has",
+                "script"
+              ],
+              [
+                "has",
+                "script2"
+              ],
+              [
+                "has",
+                "script3"
+              ]
+            ],
+            [
+              "format",
+              [
+                "get",
+                "name:en"
+              ],
+              {},
+              "\n",
+              {},
+              [
+                "coalesce",
+                [
+                  "get",
+                  "pgf:name"
+                ],
+                [
+                  "get",
+                  "name"
+                ]
+              ],
+              {
+                "text-font": [
+                  "case",
+                  [
+                    "==",
+                    [
+                      "get",
+                      "script"
+                    ],
+                    "Devanagari"
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Devanagari Regular v1"
+                    ]
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Regular"
+                    ]
+                  ]
+                ]
+              },
+              "\n",
+              {},
+              [
+                "coalesce",
+                [
+                  "get",
+                  "pgf:name2"
+                ],
+                [
+                  "get",
+                  "name2"
+                ]
+              ],
+              {
+                "text-font": [
+                  "case",
+                  [
+                    "==",
+                    [
+                      "get",
+                      "script2"
+                    ],
+                    "Devanagari"
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Devanagari Regular v1"
+                    ]
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Regular"
+                    ]
+                  ]
+                ]
+              },
+              "\n",
+              {},
+              [
+                "coalesce",
+                [
+                  "get",
+                  "pgf:name3"
+                ],
+                [
+                  "get",
+                  "name3"
+                ]
+              ],
+              {
+                "text-font": [
+                  "case",
+                  [
+                    "==",
+                    [
+                      "get",
+                      "script3"
+                    ],
+                    "Devanagari"
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Devanagari Regular v1"
+                    ]
+                  ],
+                  [
+                    "literal",
+                    [
+                      "Noto Sans Regular"
+                    ]
+                  ]
+                ]
+              }
+            ],
+            [
+              "case",
+              [
+                "!",
+                [
+                  "has",
+                  "script"
+                ]
+              ],
+              [
+                "format",
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "name:en"
+                  ],
+                  [
+                    "get",
+                    "pgf:name"
+                  ],
+                  [
+                    "get",
+                    "name"
+                  ]
+                ],
+                {},
+                "\n",
+                {},
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "pgf:name2"
+                  ],
+                  [
+                    "get",
+                    "name2"
+                  ]
+                ],
+                {
+                  "text-font": [
+                    "case",
+                    [
+                      "==",
+                      [
+                        "get",
+                        "script2"
+                      ],
+                      "Devanagari"
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Devanagari Regular v1"
+                      ]
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Regular"
+                      ]
+                    ]
+                  ]
+                },
+                "\n",
+                {},
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "pgf:name3"
+                  ],
+                  [
+                    "get",
+                    "name3"
+                  ]
+                ],
+                {
+                  "text-font": [
+                    "case",
+                    [
+                      "==",
+                      [
+                        "get",
+                        "script3"
+                      ],
+                      "Devanagari"
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Devanagari Regular v1"
+                      ]
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Regular"
+                      ]
+                    ]
+                  ]
+                }
+              ],
+              [
+                "!",
+                [
+                  "has",
+                  "script2"
+                ]
+              ],
+              [
+                "format",
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "name:en"
+                  ],
+                  [
+                    "get",
+                    "pgf:name2"
+                  ],
+                  [
+                    "get",
+                    "name2"
+                  ]
+                ],
+                {},
+                "\n",
+                {},
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "pgf:name"
+                  ],
+                  [
+                    "get",
+                    "name"
+                  ]
+                ],
+                {
+                  "text-font": [
+                    "case",
+                    [
+                      "==",
+                      [
+                        "get",
+                        "script"
+                      ],
+                      "Devanagari"
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Devanagari Regular v1"
+                      ]
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Regular"
+                      ]
+                    ]
+                  ]
+                },
+                "\n",
+                {},
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "pgf:name3"
+                  ],
+                  [
+                    "get",
+                    "name3"
+                  ]
+                ],
+                {
+                  "text-font": [
+                    "case",
+                    [
+                      "==",
+                      [
+                        "get",
+                        "script3"
+                      ],
+                      "Devanagari"
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Devanagari Regular v1"
+                      ]
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Regular"
+                      ]
+                    ]
+                  ]
+                }
+              ],
+              [
+                "format",
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "name:en"
+                  ],
+                  [
+                    "get",
+                    "pgf:name3"
+                  ],
+                  [
+                    "get",
+                    "name3"
+                  ]
+                ],
+                {},
+                "\n",
+                {},
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "pgf:name"
+                  ],
+                  [
+                    "get",
+                    "name"
+                  ]
+                ],
+                {
+                  "text-font": [
+                    "case",
+                    [
+                      "==",
+                      [
+                        "get",
+                        "script"
+                      ],
+                      "Devanagari"
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Devanagari Regular v1"
+                      ]
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Regular"
+                      ]
+                    ]
+                  ]
+                },
+                "\n",
+                {},
+                [
+                  "coalesce",
+                  [
+                    "get",
+                    "pgf:name2"
+                  ],
+                  [
+                    "get",
+                    "name2"
+                  ]
+                ],
+                {
+                  "text-font": [
+                    "case",
+                    [
+                      "==",
+                      [
+                        "get",
+                        "script2"
+                      ],
+                      "Devanagari"
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Devanagari Regular v1"
+                      ]
+                    ],
+                    [
+                      "literal",
+                      [
+                        "Noto Sans Regular"
+                      ]
+                    ]
+                  ]
+                }
+              ]
+            ]
+          ]
+        ],
+        "text-font": [
+          "Noto Sans Regular"
+        ],
+        "text-size": 10.2
+      },
+      "minzoom": 11,
+      "paint": {
+        "text-color": "#4a5a70",
+        "text-halo-color": "#eaeff4",
+        "text-halo-width": 1
+      },
+      "source": "osm-vector",
+      "source-layer": "roads",
+      "type": "symbol"
+    }
+  ],
+  "name": "OSM Winter (Back)",
+  "sources": {
+    "osm-vector": {
+      "attribution": "© OpenStreetMap contributors",
+      "type": "vector"
+    }
+  },
+  "sprite": "https://protomaps.github.io/basemaps-assets/sprites/v4/light",
+  "version": 8
+}

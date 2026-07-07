@@ -1,0 +1,37 @@
+{
+  "name": "wetter-viewer",
+  "private": true,
+  "version": "0.0.0",
+  "packageManager": "pnpm@11.1.2",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint . && pnpm run test:unit",
+    "test:unit": "node --no-warnings tests/basemapStyle.test.ts && node --no-warnings tests/distIds.test.ts && node --no-warnings tests/epsMode.test.ts && node --no-warnings tests/spreadId.test.ts && node --no-warnings tests/upperAir.test.ts && node --no-warnings tests/timeBuckets.test.ts && node --no-warnings tests/windowMod.test.ts && node --no-warnings tests/startAnchor.test.ts && node --no-warnings tests/products.test.ts && node --no-warnings tests/pointVars.test.ts && node --no-warnings tests/compositeMode.test.ts && node --no-warnings tests/windWindow.test.ts && node --no-warnings tests/layerProductGate.test.ts && node --no-warnings tests/layerSeed.test.ts && node --no-warnings tests/varDisplay.test.ts && node --no-warnings tests/meteogramScale.test.ts && node --no-warnings tests/precipLogScale.test.ts && node --no-warnings tests/wxdata2.test.ts && node --no-warnings tests/stitchWindows.test.ts && node --no-warnings tests/edgeDistance.test.ts && node --no-warnings tests/contourGrad2.test.ts && node --no-warnings tests/v2client.test.ts && node --no-warnings tests/v2catalog.test.ts && node --no-warnings tests/v2style.test.ts && node --no-warnings tests/loadingGate.test.ts && node --no-warnings tests/windBarbs.test.ts && node --no-warnings tests/windowAgg.test.ts && node --no-warnings tests/lapseVar.test.ts && node --no-warnings tests/lapseGate.test.ts && node --no-warnings tests/lapseToggle.test.ts && node --no-warnings tests/lapseGridAlign.test.ts && node --no-warnings tests/terrainZsite.test.ts && node --no-warnings tests/bboxWindow.test.ts && node --no-warnings tests/leadTime.test.ts && node --no-warnings tests/runPin.test.ts && node --no-warnings tests/geocode.test.ts",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@protomaps/basemaps": "^5.7.2",
+    "maplibre-gl": "^5.24.0",
+    "pmtiles": "^4.4.1",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@types/geojson": "^7946.0.16",
+    "@types/node": "^24.13.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.3",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.3",
+    "globals": "^17.7.0",
+    "playwright-core": "^1.61.1",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.62.1",
+    "vite": "^8.1.3"
+  }
+}

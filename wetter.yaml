@@ -1,0 +1,251 @@
+# wetter example config (spec 01). `wetter serve --config wetter.yaml`
+listen: :8080
+data_dir: ./data
+cache:
+  fields_mb: 4096
+
+# Map data sources for the UI (served at /api/mapconfig). Omit a field
+# to keep the frontend's built-in default (these values).
+map:
+  # OSM vector basemap: either an XYZ tile URL template or a
+  # Protomaps-style .pmtiles archive read by the browser via HTTP range
+  # requests (needs CORS), e.g.
+  #   pmtiles: "https://tiles.rsp.li/osm/{z}/{x}/{y}.pbf"
+  # New planet archives: https://maps.protomaps.com/builds/ —
+  # self-hosting guide: https://docs.protomaps.com/guide/getting-started
+  pmtiles: "https://tiles.rsp.li/osm/{z}/{x}/{y}.pbf"
+  # Terrarium-encoded terrain: either a tile URL template (the server's
+  # TileJSON is expected next to it at {base}/tilejson.json) or a
+  # terrarium .pmtiles archive read via HTTP range requests (needs
+  # CORS), e.g.
+  #   terrain: https://example.org/planet-terrain.pmtiles
+  terrain: "https://tiles.mapterhorn.com/{z}/{x}/{y}.webp"
+
+sources:
+  # DWD ICON-D2 (deterministic, Germany + surroundings, ~2 km)
+  - id: icond2
+    type: dwd-opendata
+    model: icon-d2
+    fetch: loop
+    interval: 15m
+    keep_runs: 2
+    variables: [t_2m, td_2m, u_10m, v_10m, vmax_10m, tot_prec, clct, pmsl, relhum_2m, cape_ml, hsurf]
+    max_step: 48
+    info:
+      name: ICON-D2
+      description: >-
+        DWD deterministic, ~2 km over Germany and neighbours, 3-hourly runs, 48 h horizon.
+      provider: Deutscher Wetterdienst (DWD)
+      provider_url: https://www.dwd.de/
+      license: DL-DE->BY-2.0
+      license_url: https://www.govdata.de/dl-de/by-2-0
+
+  # DWD ICON-D2-EPS (20-member ensemble)
+  - id: icond2eps
+    type: dwd-opendata
+    model: icon-d2-eps
+    fetch: once
+    interval: 15m
+    keep_runs: 1
+    variables: [t_2m, vmax_10m, tot_prec, clct]
+    max_step: 6
+    info:
+      name: ICON-D2-EPS
+      description: >-
+        DWD ensemble (20 members, percentile products), ~2 km over Germany and neighbours, 3-hourly runs, 48 h horizon.
+      provider: Deutscher Wetterdienst (DWD)
+      provider_url: https://www.dwd.de/
+      license: DL-DE->BY-2.0
+      license_url: https://www.govdata.de/dl-de/by-2-0
+
+  # DWD ICON-EU (deterministic, Europe, ~6.5 km, regular grid)
+  - id: iconeu
+    type: dwd-opendata
+    model: icon-eu
+    fetch: loop
+    interval: 30m
+    keep_runs: 2
+    variables: [t_2m, td_2m, u_10m, v_10m, vmax_10m, tot_prec, clct, pmsl, aswdifd_s, aswdir_s, hsurf]
+    max_step: 48
+    info:
+      name: ICON-EU
+      description: >-
+        DWD deterministic, ~6.5 km over Europe, 3-hourly runs, up to 120 h horizon.
+      provider: Deutscher Wetterdienst (DWD)
+      provider_url: https://www.dwd.de/
+      license: DL-DE->BY-2.0
+      license_url: https://www.govdata.de/dl-de/by-2-0
+
+  # DWD ICON global (deterministic, ~13 km, icosahedral). Includes the
+  # radiation components so global_rad/ghi derives on demand.
+  - id: icondglobal
+    type: dwd-opendata
+    model: icon
+    fetch: loop
+    interval: 30m
+    keep_runs: 1
+    variables: [t_2m, td_2m, u_10m, v_10m, vmax_10m, tot_prec, clct, pmsl, aswdifd_s, aswdir_s, hsurf]
+    max_step: 48
+    info:
+      name: ICON Global
+      description: >-
+        DWD deterministic global NWP, ~13 km worldwide, 6-hourly runs, 180 h horizon.
+      provider: Deutscher Wetterdienst (DWD)
+      provider_url: https://www.dwd.de/
+      license: DL-DE->BY-2.0
+      license_url: https://www.govdata.de/dl-de/by-2-0
+
+  # DWD ICON-EPS global (40-member ensemble, ~26 km). Heavy: bounded
+  # horizon, single pass — flip to loop when you want it continuous.
+  - id: iconepsglobal
+    type: dwd-opendata
+    model: icon-eps
+    fetch: once
+    keep_runs: 1
+    variables: [t_2m, vmax_10m, tot_prec, clct]
+    max_step: 12
+    info:
+      name: ICON-EPS Global
+      description: >-
+        DWD global ensemble (40 members, percentile products), ~26.5 km worldwide, 6-hourly runs, 180 h horizon.
+      provider: Deutscher Wetterdienst (DWD)
+      provider_url: https://www.dwd.de/
+      license: DL-DE->BY-2.0
+      license_url: https://www.govdata.de/dl-de/by-2-0
+
+  # MeteoSwiss ICON-CH1-EPS via STAC
+  - id: iconch1
+    type: meteoswiss-stac
+    collection: ch.meteoschweiz.ogd-forecasting-icon-ch1
+    fetch: off
+    interval: 15m
+    keep_runs: 1
+    max_step: 33
+    info:
+      name: ICON-CH1-EPS
+      description: >-
+        MeteoSwiss ensemble (11 members, percentile products), ~1 km covering Switzerland, Austria, and adjacent parts of France, Germany, and Italy, 3-hourly runs, 33 h horizon.
+      provider: MeteoSwiss
+      provider_url: https://www.meteoswiss.admin.ch/
+      license: CC BY 4.0
+      license_url: https://creativecommons.org/licenses/by/4.0/
+
+  # A run output folder (e.g. experimental model output; any filenames)
+  # - id: team-run
+  #   type: folder
+  #   path: /path/to/run/output
+  #   fetch: loop
+  #   interval: 1m
+
+# Server-defined layer presets, shown in the UI's preset picker (the ⭐
+# topic) alongside locally-saved ones. `layers` uses the share-URL
+# grammar: arrange the view in the UI and copy the `l=` parameter out of
+# the address bar.
+#
+# An entry whose `id` matches a built-in preset id OVERRIDES that
+# built-in in place — same topic slot in the picker, layers/name/icon
+# from here. The catalog below mirrors the built-ins 1:1 (generated by
+# frontend/scripts/gen-preset-yaml.mjs), so every preset the UI ships
+# can be tuned from this file; entries with new ids (like Storm watch)
+# are added under ⭐.
+presets:
+  - name: Storm watch
+    icon: 🌀
+    description: Gusts with pressure contours and hourly precipitation.
+    layers: "vmax_10m.t.10.ga,!pmsl.c.10,precip_1h.t.10.ga"
+    base_map: dark
+
+  # --- built-in catalog (override by editing; delete = keep built-in) ---
+  - id: wind
+    name: "Surface (10 m)"
+    icon: "🌬️"
+    description: "10 m wind gusts and wind-speed flow overlay"
+    layers: "wind_speed_10m.f.10.fp8000,wind_gust_10m.t.10.ga,!wind_speed_10m.t.10.ga,!wind_dir_10m.t.10.ga"
+    base_map: black
+  - id: temperature
+    name: "Air (2 m)"
+    icon: "🌡️"
+    description: "2 m air temperature"
+    layers: "t_2m.t.10.ga"
+    base_map: grayscale
+  - id: temperature_lapsed
+    name: "Air (2 m, terrain)"
+    icon: "⛰️"
+    description: "2 m air temperature corrected to the terrain elevation (lapse rate). Baked smooth at ingest where a DEM is available; falls back to the raw field otherwise."
+    layers: "t_2m_lapsed.t.10.ga"
+    base_map: grayscale
+  - id: temperature_wetbulb
+    name: "Wet bulb (2 m)"
+    icon: "💦"
+    description: "2 m wet-bulb temperature"
+    layers: "wetbulb_2m.t.10.ga"
+    base_map: grayscale
+  - id: temperature_theta_e
+    name: "Theta-e (2 m)"
+    icon: "🔥"
+    description: "2 m equivalent potential temperature"
+    layers: "theta_e_2m.t.10.ga"
+    base_map: grayscale
+  - id: temperature_dewpoint
+    name: "Dew point (2 m)"
+    icon: "💧"
+    description: "2 m dew-point temperature"
+    layers: "td_2m.t.10.ga"
+    base_map: grayscale
+  - id: temperature_ground
+    name: "Ground"
+    icon: "🌍"
+    description: "ground / surface skin temperature"
+    layers: "t_g.t.10.ga"
+    base_map: grayscale
+  - id: precipitation
+    name: "Precipitation"
+    icon: "🌧️"
+    description: "Hourly precipitation with total cloud cover"
+    layers: "!pmsl.c.10,precip_1h.t.10.ga,clct.t.10.ga,!rain_gsp_1h.t.10.ga,!snow_gsp_1h.t.10.ga"
+    base_map: grayscale
+  - id: humidity
+    name: "Humidity at Sea Level"
+    icon: "💧"
+    description: "Relative humidity"
+    layers: "!pmsl.c.10,relhum_2m.t.10.ga,!td_2m.t.10.ga,!dpd_2m.t.10.ga,!tqv.t.10.ga"
+  - id: radiation
+    name: "Radiation"
+    icon: "☀️"
+    description: "Global (down-welling) shortwave radiation at the surface; direct/net on demand"
+    layers: "global_rad.t.10.ga,!aswdir_s.t.10.ga,!clct.t.10.ga,!asob_s.t.10.ga"
+    base_map: grayscale
+  - id: pressure
+    name: "Pressure"
+    icon: "🧭"
+    description: "Sea-level pressure tiles and pressure contours"
+    layers: "pmsl.c.10,pmsl.t.10.ga,!ps.t.10.ga"
+  - id: snow
+    name: "Snow"
+    icon: "❄️"
+    description: "Snow depth; snowfall rate and freezing level on demand"
+    layers: "h_snow.t.10.ga,!snow_gsp_1h.t.10.ga,!hzerocl.t.10.ga"
+    base_map: black
+  - id: convection
+    name: "CAPE"
+    icon: "⚡"
+    description: "CAPE with wind barbs"
+    layers: "wind_speed_10m.b.10.s70.k8.gwind,cape_ml.t.10.ga,!precip_1h.t.10.ga,!wind_gust_10m.t.10.ga"
+  - id: upper_geopotential
+    name: "Height"
+    icon: "🗺️"
+    description: "Geopotential height contours over color fill (default 500 hPa)"
+    layers: "fi_500hpa.c.10.i100,fi_500hpa.t.10.ga"
+    base_map: grayscale
+  - id: upper_temperature
+    name: "Temp"
+    icon: "🌡️"
+    description: "Air-mass temperature with geopotential height contours (default 500 hPa)"
+    layers: "fi_500hpa.c.10.i100,t_500hpa.t.10.ga"
+    base_map: grayscale
+  - id: upper_wind
+    name: "Jet"
+    icon: "🌀"
+    description: "Isobaric wind speed with flow overlay (default 500 hPa)"
+    layers: "wind_speed_500hpa.f.10.fp8000,wind_speed_500hpa.t.10.ga"
+    base_map: black

@@ -1,0 +1,3377 @@
+/* =====================================================================
+   Layout
+   ===================================================================== */
+.app {
+  width: 100%;
+  height: 100%;
+}
+
+.map-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Staggered chrome reveal on load: each floating panel rises into
+   place. Uses `both` so panels stay invisible until their delay hits. */
+@keyframes chrome-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.preset-bar { animation: chrome-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.05s both; }
+.status-badge { animation: chrome-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.14s both; }
+.map-legend { animation: chrome-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both; }
+
+@keyframes chrome-rise-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.bottom-stack { animation: chrome-rise-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.22s both; }
+
+/* =====================================================================
+   Preset bar (top-left)
+   - The active topic's variants strip sits at the top, wrapping if
+     it would otherwise run into the top-right status badge.
+   - Topic icons stack vertically below the strip.
+   ===================================================================== */
+.preset-bar {
+  position: absolute;
+  top: calc(14px + env(safe-area-inset-top, 0px));
+  left: calc(14px + env(safe-area-inset-left, 0px));
+  max-width: calc(100% - 28px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  pointer-events: none;
+}
+
+/* Top row groups the hamburger and the variants strip so the strip
+   reads as a detail layer next to the menu / icon column. The row
+   itself wraps when the strip outgrows its share of the available
+   width — wrapped rows fall under the hamburger but stay above the
+   icon stack. */
+.preset-bar-top {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.preset-sub-strip {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px;
+  pointer-events: auto;
+  /* Reserve room on the right for the floating status badge so the
+     strip wraps onto a new line before colliding with it. 360 px is
+     the badge's worst-case width including its 14 px right margin
+     plus the hamburger button width. */
+  max-width: calc(100vw - 28px - 360px - 40px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+}
+
+/* Column wrapper holding the phenomenon pill strip and, for the Upper
+   air topic, the shared height (hPa) strip stacked beneath it. Lets the
+   two strips occupy one flex slot of the row-flex .preset-bar-top so
+   the height strip sits below the pills rather than beside them. */
+.preset-sub-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* Shared upper-air 850/500/300 hPa segmented control. */
+.preset-height-strip {
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.preset-height-btn {
+  min-width: 56px;
+  text-align: center;
+}
+
+.preset-sub-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@media (max-width: 720px) {
+  /* On narrow screens the status badge takes a meaningful slice of
+     the top edge, so push the entire preset bar down so the strip
+     sits unambiguously below the info modal rather than racing
+     against it for the same horizontal band. */
+  .preset-bar {
+    top: calc(64px + env(safe-area-inset-top, 0px));
+  }
+  /* And stack the hamburger + strip vertically — strip gets its
+     own row immediately under the menu button, with most of the
+     width available since it no longer needs to dodge the badge. */
+  .preset-bar-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  /* On mobile, scroll the level strip horizontally instead of wrapping
+     onto multiple rows — wrapping ate vertical space and overlaid map
+     labels (Surface (10 m) is wider than the hPa pills, which forced
+     an awkward 4+3 break). Single row + horizontal pan keeps the bar
+     compact and reads as a familiar mobile chip carousel. */
+  .preset-sub-strip {
+    flex-wrap: nowrap;
+    max-width: calc(100vw - 28px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .preset-sub-strip::-webkit-scrollbar { display: none; }
+  .preset-sub-cell { flex-shrink: 0; }
+  /* The hPa height strip scrolls horizontally too, same as the pills. */
+  .preset-height-strip {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .preset-height-strip::-webkit-scrollbar { display: none; }
+  .preset-height-btn { flex-shrink: 0; }
+}
+
+/* Topic icon: a paper tile with a hard shadow. The tile lifts on
+   hover and presses flat on click — the shadow does the animating,
+   never blur. The active topic gets the sun-yellow fill. */
+.preset-topic-btn {
+  background: var(--panel);
+  border: 2px solid var(--border);
+  padding: 5px;
+  border-radius: 0;
+  cursor: pointer;
+  /* `.preset-bar` has pointer-events: none so the empty space between
+     icons doesn't block map interaction; each clickable child has to
+     opt back in. Without this the button passes clicks through to the
+     map (which then opens the point-inspector "measurement" popup). */
+  pointer-events: auto;
+  line-height: 1;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.08s, box-shadow 0.08s, background 0.12s;
+}
+
+.preset-topic-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--shadow-ink);
+}
+
+.preset-topic-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+.preset-topic-btn.active {
+  background: var(--accent);
+}
+
+.preset-topic-glyph {
+  font-size: 26px;
+  line-height: 1;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji",
+    sans-serif;
+  display: inline-block;
+}
+
+/* Sub-options row — labelled buttons, only shown when a topic is
+   active. These do carry a soft pill background so the labels read
+   cleanly over the map. */
+.preset-sub-cell { position: relative; }
+
+.preset-sub-btn {
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: 0;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 10px;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.12s, transform 0.08s, box-shadow 0.08s;
+  white-space: nowrap;
+}
+
+.preset-sub-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--shadow-ink);
+}
+
+.preset-sub-btn.active {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.preset-sub-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+.preset-sub-delete {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--bg-surface-2);
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.preset-sub-cell:hover .preset-sub-delete { display: inline-flex; }
+
+.preset-sub-delete:hover {
+  background: var(--danger);
+  color: white;
+  border-color: var(--danger);
+}
+
+/* Set-once settings disclosure in the side panel. Keeps the panel's
+   top focused on per-session controls (model, layers, units) while
+   basemap / projection / quality / playback fold away. */
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  background: transparent;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s;
+}
+
+.settings-toggle:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.settings-toggle-caret {
+  font-size: 9px;
+}
+
+/* Hamburger button (settings / layer customisation) — sits at the
+   end of the topic row. Same paper-tile language as the topic icons. */
+.preset-menu-btn {
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: 0;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.12s, transform 0.08s, box-shadow 0.08s;
+}
+
+.preset-menu-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--shadow-ink);
+}
+
+.preset-menu-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+.preset-menu-btn.open {
+  background: var(--accent);
+}
+
+.preset-menu-btn span {
+  display: block;
+  width: 18px;
+  height: 3px;
+  background: var(--text);
+  transition: transform 0.2s, opacity 0.2s, background 0.2s;
+}
+
+.preset-menu-btn.open span { background: var(--accent-ink); }
+.preset-menu-btn.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.preset-menu-btn.open span:nth-child(2) { opacity: 0; }
+.preset-menu-btn.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+/* =====================================================================
+   Controls sidebar
+   ===================================================================== */
+.controls {
+  position: absolute;
+  /* Sit to the right of the vertical preset bar (which is ~36px wide
+     plus margin). */
+  top: calc(14px + env(safe-area-inset-top, 0px));
+  left: calc(60px + env(safe-area-inset-left, 0px));
+  z-index: 15;
+  width: var(--sidebar-width);
+  max-width: calc(100vw - 74px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+  /* Leave room for the bottom stack (time bar + day strip) so the
+     panel's lowest controls stay clickable instead of hiding behind
+     it. --bottom-stack-h is published by App.tsx via a ResizeObserver. */
+  max-height: calc(100% - 28px - var(--bottom-stack-h, 110px) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 14px;
+  gap: 14px;
+  box-shadow: var(--bezel), var(--shadow-lg);
+  transform: translateX(0);
+  opacity: 1;
+  transition: transform 0.25s ease, opacity 0.2s ease;
+}
+
+.controls:not(.open) {
+  transform: translateX(-12px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Left column of the status badge: "Wetter" title + Alpha tag, with
+   a vertical divider separating it from the Time/Model stats. */
+.status-badge-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.loading-indicator {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Unified centered loading indicator. Sits in the middle of the map
+   for every loading scenario: initial style.json fetch, GPU first-
+   chunk wait, play-loop next-frame gate. The dialog-style pill shows
+   a spinner, a live in-flight request count, and an HDR/SDR switch
+   so a user who hits this overlay on a slow connection can drop
+   quality without waiting for the load to finish.
+
+   The overlay itself stays pointer-events: none so map interaction
+   (pan/zoom/click) is unaffected; only the quality toggle re-enables
+   pointer events so it stays clickable. */
+.loading-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 18px 24px;
+  min-width: 160px;
+  background: var(--panel-strong);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  pointer-events: none;
+  color: var(--text);
+  font-family: var(--font);
+}
+
+.loading-overlay-spinner {
+  width: 32px;
+  height: 32px;
+  border-width: 3px;
+}
+
+.loading-overlay-meta {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
+.loading-overlay-quality {
+  display: inline-flex;
+  background: var(--bg-input);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 2px;
+  gap: 2px;
+  pointer-events: auto;
+  margin-top: 2px;
+}
+.loading-overlay-quality .toggle-btn {
+  font-size: 11px;
+  padding: 4px 10px;
+}
+
+/* Subtle, non-blocking "still loading" chip. Shown after the centered
+   overlay clears (first chunk painted) while a slow layer's remaining
+   tiles keep streaming — e.g. a cold exceedance / Chance-of load.
+   Bottom-right so it clears the legend (bottom-left) and time bar
+   (bottom-center); pointer-events:none so map interaction is unaffected. */
+.loading-chip {
+  position: absolute;
+  right: calc(14px + env(safe-area-inset-right, 0px));
+  bottom: calc(var(--bottom-stack-h, 110px) + 12px + env(safe-area-inset-bottom, 0px));
+  z-index: 11;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px;
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: 0;
+  box-shadow: var(--bezel), var(--shadow-md);
+  pointer-events: none;
+  color: var(--text-muted);
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 600;
+  animation: chip-fade 0.2s ease both;
+}
+
+.loading-chip-spinner {
+  width: 11px;
+  height: 11px;
+  border-width: 2px;
+}
+
+.loading-chip-label {
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+@keyframes chip-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Sections -------------------------------------------------------- */
+.controls section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.controls label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+/* Form primitives ------------------------------------------------- */
+.controls select,
+.controls input[type="range"] {
+  width: 100%;
+}
+
+.controls select {
+  background: var(--bg-input);
+  color: var(--text);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: var(--font);
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%23141414' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+  transition: border-color 0.12s, background-color 0.12s;
+}
+
+.controls select:hover {
+  border-color: var(--border-strong);
+}
+
+.controls select:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+/* Range slider: an ink rail with a square sun-yellow thumb. -------- */
+.controls input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: var(--border);
+  border-radius: 0;
+  cursor: pointer;
+  margin: 8px 0;
+}
+.controls input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--accent);
+  border: 2px solid var(--border);
+  border-radius: 0;
+  cursor: grab;
+  transition: transform 0.1s;
+}
+.controls input[type="range"]::-webkit-slider-thumb:active { cursor: grabbing; transform: scale(1.1); }
+.controls input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: var(--accent);
+  border: 2px solid var(--border);
+  border-radius: 0;
+  cursor: pointer;
+}
+
+/* =====================================================================
+   Location search (top center)
+   ===================================================================== */
+/* Anchored under the Wetter status badge in the top-right corner;
+   the results panel grows leftward from the right edge. */
+.location-search {
+  position: absolute;
+  top: calc(82px + env(safe-area-inset-top, 0px));
+  right: calc(14px + env(safe-area-inset-right, 0px));
+  z-index: 14;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  animation: chrome-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.18s both;
+}
+
+.location-search-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: 0;
+  box-shadow: var(--shadow-sm);
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 0.08s, box-shadow 0.08s, background 0.12s;
+}
+
+.location-search-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--shadow-ink);
+  background: var(--accent);
+}
+
+.location-search-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+.location-search-panel {
+  width: min(340px, calc(100vw - 28px));
+  background: var(--panel-strong);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--bezel), var(--shadow-lg);
+  overflow: hidden;
+}
+
+.location-search-inputrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+}
+
+.location-search-glyph {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.location-search-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+}
+
+.location-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.location-search-empty {
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+  border-top: 2px solid var(--border);
+}
+
+.location-search-results {
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  border-top: 2px solid var(--border);
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.location-search-result {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.location-search-result.active {
+  background: var(--accent-soft);
+}
+
+.location-search-result-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.location-search-result-detail {
+  font-size: 11px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =====================================================================
+   Status badge (top-right)
+   ===================================================================== */
+.status-badge {
+  position: absolute;
+  top: calc(14px + env(safe-area-inset-top, 0px));
+  right: calc(14px + env(safe-area-inset-right, 0px));
+  z-index: 15;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--bezel), var(--shadow-md);
+  min-width: 200px;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.status-badge:hover,
+.status-badge:focus-within {
+  background: var(--bg-surface-2);
+  box-shadow: 5px 5px 0 var(--shadow-ink);
+}
+
+/* The model switcher: a compact native select (keyboard/touch friendly)
+   styled like the badge's mono values. */
+.status-badge-select {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 6px);
+  padding: 1px 18px 1px 6px;
+  margin-right: -4px;
+  max-width: 168px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%23141414' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+  transition: border-color 0.12s, background-color 0.12s;
+}
+
+.status-badge-select:hover {
+  border-color: var(--border-strong);
+  background-color: var(--bg-input);
+}
+
+.status-badge-select:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.status-badge-select option {
+  background: var(--bg-surface, #1b1a1e);
+  color: var(--text);
+  font-family: var(--font);
+}
+
+/* Model-info affordance: a small (i) button next to the switcher. */
+.status-badge-info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  margin: -2px;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.status-badge-info-btn:hover .status-badge-info,
+.status-badge-info-btn:focus-visible .status-badge-info {
+  color: var(--text);
+  opacity: 1;
+}
+
+.status-badge-info-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.status-badge-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.status-badge-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.status-badge-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-badge-info {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  opacity: 0.55;
+  transition: color 0.15s, opacity 0.15s;
+}
+
+/* =====================================================================
+   Attribution / Model info modal
+   ===================================================================== */
+.attribution-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow: auto;
+}
+
+.attribution-page {
+  width: min(640px, 100%);
+  max-height: 100%;
+  background: var(--bg-surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.attribution-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background: var(--accent);
+  border-bottom: 2px solid var(--border);
+}
+
+.attribution-header h2 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 15px;
+  font-weight: 400;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  letter-spacing: 0.02em;
+}
+
+.attribution-body {
+  padding: 18px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.attribution-body a {
+  color: var(--text);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--accent);
+  text-underline-offset: 2px;
+}
+.attribution-body a:hover { background: var(--accent); }
+
+.attribution-section h3 {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin: 0 0 8px 0;
+}
+
+.attribution-subheading {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin: 12px 0 6px 0;
+}
+
+.attribution-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.attribution-empty {
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 0;
+}
+
+.attribution-model {
+  padding: 12px 14px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-2);
+}
+
+.attribution-model.primary {
+  background: var(--accent-soft);
+  box-shadow: var(--shadow-sm);
+}
+
+.attribution-model-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.attribution-model-name { font-weight: 600; color: var(--text); }
+
+.attribution-model-id {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.attribution-model-desc { margin: 4px 0; color: var(--text-soft); }
+
+.attribution-model-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Model info extensions ---------------------------------------- */
+.model-info-page { width: min(720px, 100%); }
+
+.model-info-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.model-info-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-2);
+}
+
+.model-info-stat-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.model-info-stat-value {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text);
+}
+
+.model-info-forecast-range {
+  margin: 10px 0 0 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.model-info-var-group { margin-bottom: 10px; }
+
+.model-info-var-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.model-info-var-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-2);
+}
+
+.model-info-var-row.unavailable { opacity: 0.55; }
+
+.model-info-var-main {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.model-info-var-name {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.model-info-var-units {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.model-info-var-tag {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border: 2px solid var(--border);
+  border-radius: 0;
+  padding: 1px 7px;
+  line-height: 1.4;
+}
+
+.model-info-var-tag.muted {
+  color: var(--text-muted);
+  background: transparent;
+}
+
+.model-info-var-desc { font-size: 12px; color: var(--text-soft); }
+
+.model-info-var-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.model-info-display-btn {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--bg-input);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  line-height: 1.4;
+  transition: background 0.12s, color 0.12s;
+}
+
+a.model-info-display-btn:hover,
+button.model-info-display-btn:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--accent-ink);
+  text-decoration: none;
+}
+
+.model-info-display-btn:disabled {
+  color: var(--text-muted);
+  border-color: var(--border);
+  cursor: not-allowed;
+}
+
+/* =====================================================================
+   Bottom stack: attribution strip + time bar
+   ===================================================================== */
+.bottom-stack {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+}
+
+.maplibregl-ctrl-bottom-right,
+.maplibregl-ctrl-bottom-left {
+  bottom: calc(var(--bottom-stack-h, 110px) + 8px) !important;
+  z-index: 16;
+}
+
+/* Wide screens: the legend (left) and the map nav buttons (right)
+   drop down to flank the full-width time bar on one shared line.
+   --time-bar-h tracks just the time bar so the flanking chrome lands
+   beside it. Narrow viewports keep the stacked layout. */
+@media (min-width: 1200px) {
+  .map-legend {
+    bottom: calc(var(--time-bar-h, 68px) + 12px + env(safe-area-inset-bottom, 0px));
+  }
+  .maplibregl-ctrl-bottom-right,
+  .maplibregl-ctrl-bottom-left {
+    bottom: calc(var(--time-bar-h, 68px) + 12px) !important;
+  }
+}
+
+.bottom-stack .time-bar { position: static; }
+
+/* Time bar --------------------------------------------------- */
+.time-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 15;
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  padding: 10px 14px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  padding-left: calc(14px + env(safe-area-inset-left, 0px));
+  padding-right: calc(14px + env(safe-area-inset-right, 0px));
+  background: transparent;
+}
+
+.time-bar-days {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 2px;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  align-items: center;
+}
+.time-bar-days::-webkit-scrollbar { height: 4px; }
+.time-bar-days::-webkit-scrollbar-track { background: transparent; }
+.time-bar-days::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 2px;
+}
+
+/* One pill per day: day label + a known-width track. Step label
+   positions, the progress fill, the current-step line, and the hover
+   tooltip all live in the track's coordinate space, so they align to
+   a single time axis. The box is just a flex row with the day label
+   on the left and the track on the right. */
+.time-bar-day-box {
+  position: relative;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 8px;
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: 0;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: background 0.12s, box-shadow 0.12s;
+  /* pan-x: let the browser take the gesture for horizontal scroll of the
+     parent .time-bar-days row on touch. The TimeBar component still gets
+     pointerdown/up for tap-to-select; horizontal swipes scroll the row
+     and cancel the pointer (handled in onPointerCancel). */
+  touch-action: pan-x;
+  user-select: none;
+}
+
+.time-bar-day-box:hover {
+  background: var(--bg-hover);
+}
+
+.time-bar-day-box.active {
+  background: var(--bg-input);
+  box-shadow: 3px 3px 0 var(--shadow-ink);
+}
+
+/* The progress fill bleeds from the box's left edge (behind the day
+   label) out to the active step's label position in the track. The
+   active step is now signalled by the hover tooltip (which surfaces
+   the selected wall-clock time on pointer-move) and the accent-tinted
+   active-day chrome; no separate vertical bar at the fill edge. */
+.time-bar-day-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--accent);
+  border-radius: 0;
+  box-sizing: border-box;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Two-line stacked label: weekday on top, day-number below. The
+   column is narrow (~22px) and tightly leaded so the day-box height
+   is driven by the label rather than by min-height padding. Stacking
+   weekday over day-number — instead of "Sat 11" inline — lets the
+   row sit ~6px shorter without losing any of the label content. */
+.time-bar-day-label {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  min-width: 22px;
+  line-height: 1;
+  font-family: var(--font);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.time-bar-day-label-weekday {
+  font-size: 9px;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.time-bar-day-label-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0;
+  margin-top: 1px;
+}
+
+.time-bar-day-box.active .time-bar-day-label {
+  color: var(--text);
+}
+
+/* Track: its width is set per-day inline (stepsInDay * 8px) so a
+   position of X% maps onto step offset = X% * maxOffset. Label
+   positions and the hover tooltip live in this space; the fill is
+   outside (in box coords) but its right edge aligns to the track's
+   activePct by construction of fillWidthPx. */
+.time-bar-day-track {
+  position: relative;
+  z-index: 1;
+  height: 14px;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+/* Known-width steps track so label positions align with clock fractions
+   (leftPct = i/maxOffset). The inline width is set per-day by React:
+   maxOffset * 8px, which keeps labels ~24px apart for every-3h stride
+   on 1h data — just wide enough that two-digit labels don't collide
+   with their neighbors. */
+.time-bar-day-steps {
+  position: relative;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+.time-bar-day-num {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-soft);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.time-bar-day-num.active {
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* Hours already behind the current step ("overlapped" by the fill).
+   Muted so the future hours read as primary, but still visible and
+   selectable so the user can scrub back to them. */
+.time-bar-day-num.past {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* Two-line hover readout: date on top, clock below. line-height: 1
+   keeps the rows tight against each other so the tooltip stays
+   compact and the gap between date and clock is just the font's
+   intrinsic descender — easier to scan than one long single line. */
+.time-bar-day-tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3px 8px;
+  background: var(--bg-input);
+  border: 2px solid var(--border);
+  border-radius: 0;
+  font-family: var(--mono);
+  color: var(--text);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 20;
+  line-height: 1;
+  box-shadow: var(--shadow-sm);
+}
+
+.time-bar-day-tooltip-date {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.time-bar-day-tooltip-clock {
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 3px;
+}
+
+.play-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  background: var(--accent);
+  border: 2px solid var(--border);
+  border-radius: 0;
+  box-shadow: var(--shadow-sm);
+  color: var(--accent-ink);
+  cursor: pointer;
+  transition: background 0.12s, transform 0.08s, box-shadow 0.08s;
+  align-self: center;
+}
+
+.play-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--shadow-ink);
+}
+.play-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+/* Window-mode + Local/UTC controls: a column of two compact segmented
+   controls sat to the right of the play button, before the timeline
+   row. Reuses .toggle-group/.toggle-btn for theme consistency. */
+/* Window-mode selector inside the legend box (moved out of the time
+   bar). Full-width row of pills above the legend entries. */
+.legend-window-modes {
+  width: 100%;
+}
+.legend-window-modes .toggle-btn {
+  flex: 1;
+  padding: 4px 6px;
+  font-size: 11px;
+}
+
+/* Windowed (6h/12h/daily) timeline: one pill per window, horizontally
+   scrollable like the day row. The active window is accent-tinted;
+   partial windows (forecast edge doesn't fill the nominal span) are
+   hatched + dimmed. */
+.time-bar-windows {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 2px;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  align-items: center;
+}
+.time-bar-windows::-webkit-scrollbar { height: 4px; }
+.time-bar-windows::-webkit-scrollbar-track { background: transparent; }
+.time-bar-windows::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 2px;
+}
+
+.time-bar-window {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 6px 12px;
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: 0;
+  box-shadow: var(--shadow-sm);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+  touch-action: pan-x;
+  user-select: none;
+}
+/* Day context line above the hour range; dimmed + smaller so the range
+   reads as the primary label. A blank line (whitespace) holds height on
+   pills that aren't the first of their day, keeping the row aligned. */
+.time-bar-window-day {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  line-height: 1;
+  min-height: 9px;
+}
+.time-bar-window-range {
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.time-bar-window:hover { background: var(--bg-hover); }
+.time-bar-window.active {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+  box-shadow: 3px 3px 0 var(--shadow-ink);
+}
+.time-bar-window--partial {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 4px,
+    rgba(255, 255, 255, 0.1) 4px,
+    rgba(255, 255, 255, 0.1) 8px
+  );
+  opacity: 0.75;
+}
+
+/* =====================================================================
+   Toggle groups / segmented controls
+   ===================================================================== */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.toggle-group {
+  display: inline-flex;
+  background: var(--bg-input);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 2px;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.toggle-btn {
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font);
+  border-radius: 0;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  line-height: 1.2;
+}
+
+.toggle-btn.active {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+}
+
+.toggle-btn:hover:not(.active) {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+/* Save-current-as-preset action button (in the controls panel). */
+.preset-action-btn {
+  width: 100%;
+  background: var(--bg-input);
+  color: var(--text-muted);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: 12px;
+  font-family: var(--font);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.preset-action-btn:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.preset-action-btn.active {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+
+.preset-action-btn.primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+
+.preset-action-btn.primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.preset-action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.preset-saved-summary {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Inline form for naming a saved preset */
+.preset-save-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  align-items: center;
+}
+
+.preset-save-form .preset-action-btn { width: auto; flex: 0 0 auto; }
+
+.preset-save-name {
+  flex: 1 1 auto;
+  background: var(--bg-input);
+  color: var(--text);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  font-size: 12px;
+  font-family: var(--font);
+}
+
+.preset-save-name:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.preset-save-icon {
+  width: 36px;
+  background: var(--bg-input);
+  color: var(--text);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 4px;
+  font-size: 16px;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji",
+    var(--font);
+  text-align: center;
+}
+
+.preset-save-icon:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* =====================================================================
+   Layer cards (sidebar)
+   ===================================================================== */
+.controls section > .layer-control + .layer-control { margin-top: 8px; }
+
+.layer-control {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-2);
+  cursor: default;
+  transition: border-color 0.12s, background 0.12s, transform 0.12s;
+}
+
+.layer-control:hover { border-color: var(--border-strong); }
+
+.layer-control.dragging {
+  opacity: 0.5;
+  background: var(--accent-soft);
+  transform: scale(0.99);
+}
+
+.layer-control > input[type="range"] { margin: 2px 0; }
+
+.layer-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.layer-label-stack {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.15;
+}
+
+.layer-label-short {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.layer-label-long {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.layer-remove-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  transition: color 0.12s, background 0.12s, border-color 0.12s;
+}
+
+.layer-remove-btn:hover {
+  color: var(--danger);
+  background: rgba(255, 73, 17, 0.1);
+  border-color: var(--danger);
+}
+
+.layer-legend { margin-top: 2px; }
+
+.layer-legend .colormap-bar {
+  width: 100%;
+  height: 10px;
+  border-radius: 0;
+}
+
+.layer-legend .colormap-labels {
+  font-size: 10px;
+  margin-top: 3px;
+}
+
+/* Mode pills inside layer header */
+.layer-mode-group {
+  display: inline-flex;
+  gap: 2px;
+  background: var(--bg-input);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  flex-shrink: 0;
+}
+
+.layer-mode-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  cursor: pointer;
+  line-height: 1.4;
+  border-radius: 3px;
+  transition: background 0.12s, color 0.12s;
+}
+
+.layer-mode-btn.active {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.layer-mode-btn:hover:not(.active) {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+/* Per-layer DET|EPS + ensemble-product control (layer builder). The
+   segment group + its revealed ⋯ overflow stack in the value column of
+   the .layer-sub-control grid; each group wraps inside the narrow panel. */
+.layer-ens-control .layer-ens-segs {
+  grid-column: 2 / span 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+
+.layer-ens-control .layer-mode-group {
+  flex-wrap: wrap;
+}
+
+.drag-handle {
+  color: var(--text-muted);
+  font-size: 11px;
+  user-select: none;
+  cursor: grab;
+  flex-shrink: 0;
+  padding: 2px;
+  border-radius: 3px;
+  transition: color 0.12s, background 0.12s;
+}
+
+.drag-handle:hover {
+  color: var(--text);
+  background: var(--bg-hover);
+}
+
+.layer-control.dragging .drag-handle { cursor: grabbing; }
+
+/* Sub-controls (indented settings under a layer card) --------- */
+.layer-sub-control {
+  display: grid;
+  grid-template-columns: 88px 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.layer-sub-control input[type="range"] {
+  width: 100%;
+  margin: 0;
+}
+
+.layer-sub-control > input[type="number"],
+.layer-sub-control > select {
+  grid-column: 2 / span 2;
+}
+
+.layer-sub-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.layer-sub-input {
+  width: 100%;
+  background: var(--bg-input);
+  color: var(--text);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px 8px;
+  font-size: 12px;
+  font-family: var(--mono);
+}
+
+.layer-sub-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.layer-color-input {
+  width: 28px;
+  height: 22px;
+  padding: 0;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  background: transparent;
+  justify-self: end;
+}
+
+/* Checkbox label (shared) */
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  text-transform: none;
+  font-weight: 400;
+  letter-spacing: normal;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.checkbox-label input[type="checkbox"] {
+  accent-color: var(--accent);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.text-muted {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.colormap-bar {
+  width: 100%;
+  height: 14px;
+  border-radius: 0;
+  border: 2px solid var(--border);
+  display: block;
+}
+
+.colormap-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--text-muted);
+}
+
+/* About footer: GitHub link + build version at the panel's bottom. */
+.controls-about {
+  flex-direction: row !important;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 2px solid var(--border);
+}
+
+.controls-github {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--accent);
+  text-underline-offset: 3px;
+}
+
+.controls-github:hover {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.controls-version {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* Meta info block ---------------------------------------------- */
+.meta-info {
+  background: var(--bg-surface-2);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  gap: 6px !important;
+}
+
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  font-family: var(--mono);
+  color: var(--text);
+}
+
+.meta-label {
+  color: var(--text-muted);
+  font-family: var(--font);
+}
+
+/* =====================================================================
+   Point popup (bottom-right)
+   ===================================================================== */
+.point-popup {
+  position: absolute;
+  bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+  right: calc(24px + env(safe-area-inset-right, 0px));
+  width: 340px;
+  max-width: calc(100vw - 32px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+  background: var(--panel-strong);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--bezel), var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.point-popup-elev {
+  display: block;
+  font-size: 10px;
+  opacity: 0.65;
+  font-weight: normal;
+  margin-top: 1px;
+}
+
+.point-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--accent);
+  font-size: 12px;
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--accent-ink);
+  border-bottom: 2px solid var(--border);
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  transition: color 0.12s;
+}
+
+.close-btn:hover { color: var(--text); }
+
+/* On the accent (yellow) popup header the muted grey ✕ was nearly
+   invisible — ink it and grow slightly on hover. */
+.point-popup-header .close-btn { color: var(--accent-ink); }
+.point-popup-header .close-btn:hover {
+  color: var(--accent-ink);
+  transform: scale(1.2);
+}
+
+.point-popup-body {
+  padding: 10px 14px 12px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.multi-var-chart { margin-bottom: 8px; }
+
+.multi-var-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 6px 0 2px;
+  border-top: 1px solid var(--border);
+}
+
+.point-loading,
+.point-error,
+.point-chart-empty {
+  padding: 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.point-error { color: var(--danger); }
+
+/* Point chart ---------------------------------------------- */
+.point-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.point-chart-focus {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+  min-height: 16px;
+}
+
+.point-chart-focus-time { color: var(--text-muted); }
+
+.point-chart-focus-value {
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* Ensemble p10–p90 range readout under the focus value. Deliberately
+   subtle: muted color, smaller type, right-aligned to sit under the
+   main value. */
+.point-chart-band {
+  display: flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: -4px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.point-chart-band-label {
+  opacity: 0.7;
+}
+
+.point-chart-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.point-chart-axis {
+  stroke: var(--border);
+  stroke-width: 1;
+  fill: none;
+}
+
+.point-chart-zero {
+  stroke: var(--border);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+  fill: none;
+}
+
+.point-chart-tick {
+  fill: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 9px;
+}
+
+.point-chart-line {
+  stroke: var(--accent-strong);
+  stroke-width: 2;
+  fill: none;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* Ensemble envelope: outer = p10–p90, inner = p25–p75. Two stacked
+   translucent fills read as a probability gradient around the line. */
+.point-chart-band-area {
+  fill: var(--accent-strong);
+  fill-opacity: 0.16;
+  stroke: none;
+}
+
+.point-chart-band-area.inner {
+  fill-opacity: 0.26;
+}
+
+/* Bar-chart counterpart: per-step vertical whiskers. */
+.point-chart-whisker {
+  stroke: var(--accent-strong);
+  stroke-width: 1;
+  opacity: 0.45;
+  stroke-linecap: round;
+}
+
+.point-chart-whisker.inner {
+  stroke-width: 2.5;
+  opacity: 0.6;
+}
+
+.point-chart-dot {
+  fill: var(--accent);
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.point-chart-bar {
+  fill: var(--accent-strong);
+  fill-opacity: 0.65;
+  transition: fill-opacity 0.1s;
+}
+
+.point-chart-bar.hover { fill-opacity: 0.85; }
+.point-chart-bar.active { fill-opacity: 1; }
+.point-chart-bar.neg { fill: var(--danger); }
+
+.point-chart-marker {
+  stroke: var(--border);
+  stroke-width: 1;
+  stroke-dasharray: 3 2;
+  opacity: 0.7;
+}
+
+.point-chart-marker.hover {
+  stroke-dasharray: none;
+  opacity: 0.9;
+}
+
+.point-chart-stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+  margin-top: 2px;
+}
+
+.point-chart-stats b {
+  color: var(--text);
+  font-weight: 600;
+  margin-left: 2px;
+}
+
+/* Meteogram (meteoblue-style stacked panels) ------------------- */
+.point-popup-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.point-popup-view {
+  padding: 1px;
+  gap: 1px;
+}
+
+.point-popup-view .toggle-btn {
+  font-size: 10px;
+  padding: 3px 8px;
+}
+
+.meteogram-focus {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  min-height: 16px;
+  margin-bottom: 2px;
+}
+
+.meteogram-focus-time {
+  color: var(--text-muted);
+}
+
+.meteogram-focus-vals {
+  color: var(--text-soft);
+}
+
+.meteogram-focus-vals b {
+  color: var(--warning);
+  font-weight: 700;
+}
+
+.meteogram-night {
+  fill: rgba(0, 0, 0, 0.35);
+}
+
+.meteogram-dayline {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.meteogram-daylabel {
+  fill: var(--text-muted);
+  font-family: var(--font);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.meteogram-zero {
+  stroke: #7fd8ff;
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  opacity: 0.7;
+}
+
+/* Temperature: warm amber line + layered envelope, meteoblue-style. */
+.meteogram-temp-line {
+  stroke: #ffb155;
+  stroke-width: 2;
+  fill: none;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.meteogram-temp-band {
+  fill: #ffb155;
+  fill-opacity: 0.12;
+}
+
+.meteogram-temp-band.inner {
+  fill-opacity: 0.2;
+}
+
+.meteogram-cloud {
+  fill: #c9d2e0;
+}
+
+.meteogram-precip-bar {
+  fill: #54a8ff;
+  fill-opacity: 0.85;
+}
+
+.meteogram-prob-line {
+  stroke: #9be8f0;
+  stroke-width: 1.4;
+  stroke-dasharray: 4 3;
+  fill: none;
+  opacity: 0.9;
+}
+
+/* Right-axis precip labels pick up the bar color so the two axes
+   read as belonging to their series. */
+.meteogram-precip-tick {
+  fill: #54a8ff;
+}
+
+/* Wind-barb meteogram strip (inside the point popup) ---------- */
+.wind-barbs {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+
+.wind-barbs-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.wind-barbs-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.wind-barbs-focus {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-soft);
+  white-space: nowrap;
+}
+
+.wind-barbs-svg {
+  margin-top: 2px;
+}
+
+.wind-barbs-label.median {
+  fill: var(--accent-strong);
+  font-weight: 700;
+}
+
+.wind-barb line {
+  stroke: var(--text-soft);
+  stroke-width: 1.1;
+  stroke-linecap: round;
+}
+
+.wind-barb polygon {
+  fill: var(--text-soft);
+}
+
+.wind-barb.median line {
+  stroke: var(--accent-strong);
+  stroke-width: 1.5;
+}
+
+.wind-barb.median polygon {
+  fill: var(--accent-strong);
+}
+
+.wind-barb.focus line {
+  stroke: var(--border);
+}
+
+.wind-barb.focus polygon {
+  fill: var(--border);
+}
+
+circle.wind-barb {
+  fill: none;
+  stroke: var(--text-soft);
+  stroke-width: 1;
+}
+
+circle.wind-barb.median {
+  stroke: var(--accent-strong);
+}
+
+.wind-barbs-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-muted);
+}
+
+.wind-barbs-hint {
+  opacity: 0.7;
+}
+
+/* Level selector inside layer card */
+.layer-level-select {
+  flex: 1;
+  background: var(--bg-input);
+  color: var(--text);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px 8px;
+  font-size: 12px;
+  font-family: var(--mono);
+  cursor: pointer;
+}
+
+.layer-level-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+/* =====================================================================
+   MapLibre overrides
+   ===================================================================== */
+.maplibregl-ctrl-bottom-right {
+  bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+  right: env(safe-area-inset-right, 0px);
+}
+
+/* Top-right control stack (zoom/compass + geolocate): the corner default
+   (top 0) put it UNDERNEATH the status badge, clipping the zoom buttons to a
+   sliver. Start it below the badge (top 14 + ~56px) and the search button
+   (top 82 + 36px) so badge → search → zoom → geolocate read as one column.
+   right 4px + MapLibre's own 10px ctrl margin = the shared 14px gutter. */
+.maplibregl-ctrl-top-right {
+  /* !important: maplibre-gl.css loads after App.css and would win the
+     equal-specificity tie back to top 0 (same trick as the bottom-right
+     override above the time bar). */
+  top: calc(118px + env(safe-area-inset-top, 0px)) !important;
+  right: calc(4px + env(safe-area-inset-right, 0px)) !important;
+}
+
+.maplibregl-ctrl-group {
+  background: var(--panel) !important;
+  border: 2px solid var(--border) !important;
+  border-radius: 0 !important;
+  box-shadow: var(--shadow-sm) !important;
+  overflow: hidden;
+}
+
+.maplibregl-ctrl-group button {
+  filter: invert(0.88);
+}
+
+.maplibregl-ctrl-group button + button {
+  border-top: 2px solid var(--border) !important;
+}
+
+/* Attribution pill picks up the slab-and-ink language too. !important
+   on the colors: maplibre-gl.css loads after App.css and would win the
+   tie back to its light defaults. */
+.maplibregl-ctrl-attrib {
+  background: var(--panel) !important;
+  border: 2px solid var(--border);
+  font-family: var(--font);
+  font-size: 11px;
+  color: var(--text) !important;
+}
+.maplibregl-ctrl-attrib a { color: var(--text) !important; }
+/* The collapse (i) button glyph is a dark inline SVG — invert it like
+   the nav buttons. */
+.maplibregl-ctrl-attrib-button { filter: invert(0.88); }
+
+/* Globe ↔ flat projection toggle (custom control below geolocate) */
+.maplibregl-ctrl-group button.wx-projection-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Click indicator */
+.click-indicator {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--border);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+/* =====================================================================
+   Add layer section
+   ===================================================================== */
+.add-layer-btn {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  color: var(--text-muted);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  letter-spacing: 0.02em;
+}
+
+.add-layer-btn:hover {
+  background: var(--accent-soft);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.add-layer-section {
+  padding: 12px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--accent-soft);
+  box-shadow: var(--shadow-sm);
+  gap: 10px !important;
+}
+
+.add-layer-section > label {
+  color: var(--text);
+}
+
+.add-layer-mode-row { display: flex; flex-direction: column; gap: 6px; }
+
+.add-layer-mode-row .toggle-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  padding: 4px;
+  gap: 3px;
+  width: 100%;
+  flex: none;
+}
+
+.add-layer-mode-row .toggle-btn {
+  font-size: 11px;
+  padding: 6px 8px;
+  text-align: center;
+}
+
+.add-layer-row {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.add-layer-confirm-btn {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: 2px solid var(--border);
+  border-radius: 0;
+  padding: 7px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.12s, transform 0.08s, box-shadow 0.08s;
+}
+
+.add-layer-confirm-btn:hover:not(:disabled) {
+  background: var(--accent-hover);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--shadow-ink);
+}
+.add-layer-confirm-btn:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+.add-layer-confirm-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.add-layer-cancel-btn {
+  background: transparent;
+  color: var(--text-soft);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 6px 14px;
+  font-size: 12px;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.add-layer-cancel-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+/* =====================================================================
+   Hover value label (floats next to the cursor over the map)
+   ===================================================================== */
+.hover-value-label {
+  position: absolute;
+  z-index: 11;
+  pointer-events: none;
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text);
+  box-shadow: var(--shadow-md);
+  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* Hide on touch / no-hover devices — the label has nowhere to anchor
+     when the user is finger-tapping. */
+}
+
+@media (hover: none) {
+  .hover-value-label { display: none; }
+}
+
+.hover-value-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.hover-value-name {
+  color: var(--text-muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.hover-value-num {
+  color: var(--text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.hover-value-unit {
+  color: var(--text-muted);
+  font-weight: 400;
+  font-size: 10px;
+  margin-left: 2px;
+}
+
+/* =====================================================================
+   Map legend (on-canvas)
+   ===================================================================== */
+.map-legend {
+  position: absolute;
+  bottom: calc(var(--bottom-stack-h, 68px) + 12px + env(safe-area-inset-bottom, 0px));
+  left: calc(14px + env(safe-area-inset-left, 0px));
+  z-index: 10;
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--bezel), var(--shadow-md);
+  max-width: 220px;
+  overflow: hidden;
+  transition: width 0.2s ease;
+}
+
+.map-legend-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: var(--display);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.map-legend-toggle:hover { color: var(--text); }
+
+.map-legend-chevron {
+  font-size: 8px;
+  margin-left: 6px;
+  opacity: 0.7;
+}
+
+.map-legend-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 12px 10px;
+}
+
+.map-legend-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.map-legend-var {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.map-legend-bar-wrap {
+  position: relative;
+  width: 100%;
+  cursor: crosshair;
+}
+
+.map-legend-bar {
+  width: 100%;
+  height: 12px;
+  border-radius: 0;
+  border: 2px solid var(--border);
+  display: block;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Vertical rule + tooltip following the cursor over the legend bar.
+   Both share the same `left:%` so their alignment stays exact. The
+   marker is non-interactive so the wrapper keeps receiving pointer
+   events. */
+.map-legend-hover-marker {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--border);
+  pointer-events: none;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.7);
+}
+
+.map-legend-hover-tip {
+  position: absolute;
+  bottom: 14px;
+  transform: translateX(-50%);
+  background: var(--panel-strong);
+  border: 2px solid var(--border);
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text);
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: var(--shadow-md);
+}
+
+.map-legend-hover-unit {
+  color: var(--text-muted);
+  font-size: 9px;
+}
+
+.map-legend-range {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 10px;
+  font-family: var(--mono);
+  color: var(--text-muted);
+}
+
+.map-legend-unit {
+  font-size: 9px;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* Clickable unit cycler — replaces the static `.map-legend-unit` span
+   when the variable's unit group has multiple options. Looks like a
+   pill with a hint hover state to telegraph that it's interactive. */
+.map-legend-unit-btn {
+  background: var(--bg-surface-2);
+  border: 2px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-family: var(--mono);
+  font-size: 9px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.map-legend-unit-btn:hover {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* Probabilistic legend: Forecast / Chance-of mode chips + ≥/≤ flip. */
+.legend-mode-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+/* Max/Min chips on a secondary legend row sit just under the var name. */
+.legend-mode-chips.legend-row-agg {
+  margin-top: 1px;
+}
+
+.legend-mode-chip {
+  background: var(--bg-surface-2);
+  border: 2px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 0;
+  padding: 2px 8px;
+  font-family: var(--font);
+  font-size: 9px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.legend-mode-chip:hover {
+  color: var(--text);
+  background: var(--bg-hover);
+}
+
+.legend-mode-chip.active {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.legend-dir-chip {
+  font-family: var(--mono);
+  padding: 2px 7px;
+}
+
+/* Unified segmented ensemble-product picker (Med / Mean / p10 / p90 + ⋯).
+   A connected pill bar: the segments share borders so the group reads as
+   one control, with the overflow (⋯) expansion appearing as a second
+   group on the same row. */
+.legend-seg-group {
+  display: inline-flex;
+  align-items: center;
+}
+
+.legend-seg {
+  background: var(--bg-surface-2);
+  border: 2px solid var(--border);
+  border-left-width: 0;
+  color: var(--text-muted);
+  padding: 2px 8px;
+  font-family: var(--font);
+  font-size: 9px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.legend-seg-group > .legend-seg:first-child {
+  border-left-width: 2px;
+}
+
+.legend-seg:hover {
+  color: var(--text);
+  background: var(--bg-hover);
+}
+
+.legend-seg.active {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* Overflow toggle (⋯): a touch more horizontal padding for the wider glyph. */
+.legend-seg-more {
+  padding: 2px 9px;
+}
+
+/* The revealed overflow segments sit as their own connected pill, set off
+   from the inline group with a little breathing room. */
+.legend-seg-overflow {
+  margin-left: 4px;
+}
+
+/* Variable label row at the top of each picker-bearing legend entry. */
+.legend-primary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* Legend-header controls: the aggregation-window group and the master
+   DET|EPS switch, side by side above the per-layer rows. The window group
+   grows to fill; the switch keeps its intrinsic width on the right. */
+.legend-header-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+/* Master DET|EPS segmented control (composite legend header). Sits on its own
+   row beneath the window-mode group so the five window chips (incl. Daily)
+   keep full width and don't clip. A touch more prominent than the per-row
+   product segments — it bulk-applies on flip. */
+.legend-master-mode {
+  flex: 0 0 auto;
+  align-self: flex-start;
+}
+
+/* Second header row: DET|EPS master switch + the 🏔️ terrain toggle side by
+   side (either may be absent — the row only renders when one exists). */
+.legend-header-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.legend-terrain-toggle {
+  font-size: 12px;
+  line-height: 1.35;
+  padding: 2px 9px;
+}
+.legend-terrain-toggle:disabled {
+  cursor: default;
+}
+.legend-master-mode .legend-seg {
+  padding: 3px 9px;
+  font-size: 11px;
+}
+
+/* Per-layer windowed-aggregation operator (Max/Min) shown beside the
+   Forecast/Chance-of chips when window-mode ≠ hourly. */
+.legend-agg-chips {
+  display: inline-flex;
+  gap: 4px;
+}
+
+/* Non-interactive operator indicator: the Chance-of "Peak" lock and the
+   precip "Total" marker. Styled like a chip but dimmed and inert. */
+.legend-agg-lock {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.legend-agg-lock:hover {
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+
+/* Threshold marker (white ▲ + 2 px line); the dim overlay blacks out
+   the non-event side of the value scale. */
+.legend-threshold-wrap {
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.legend-dim-overlay {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 0;
+  pointer-events: none;
+}
+
+.legend-threshold-marker {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  margin-left: -1px;
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--border);
+  pointer-events: none;
+}
+
+/* Grabbable circular knob centered on the bar — a real touch target,
+   and a clearer affordance than the old bottom triangle. Inherits
+   pointer-events:none from the marker so the wrap keeps handling the
+   drag (tap-to-place works anywhere on the bar). */
+.legend-threshold-marker::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--border);
+}
+
+/* Give the knob breathing room so it doesn't visually touch the range
+   row below it. */
+.legend-threshold-wrap + .map-legend-range {
+  padding-top: 6px;
+}
+
+/* Value bubble over the threshold bar (desktop hover preview + the
+   during-drag readout). Floats above the bar regardless of bar height. */
+.legend-threshold-tip {
+  bottom: calc(100% + 6px);
+  top: auto;
+}
+
+.legend-threshold-value {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.legend-readout {
+  font-size: 9px;
+  color: var(--text-muted);
+}
+
+/* Touchscreens: enlarge the Chance-of bar + knob into a comfortable drag
+   target — the thin 10 px bar is hard to grab with a finger. Scoped to
+   the threshold wrap so ordinary legend bars stay compact. */
+@media (pointer: coarse) {
+  .legend-threshold-wrap .map-legend-bar {
+    height: 18px;
+  }
+  .legend-threshold-marker::after {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+/* =====================================================================
+   Mobile
+   ===================================================================== */
+@media (max-width: 600px) {
+  .time-bar {
+    padding: 8px 10px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    padding-left: calc(10px + env(safe-area-inset-left, 0px));
+    padding-right: calc(10px + env(safe-area-inset-right, 0px));
+    gap: 8px;
+  }
+
+  .time-bar-days { gap: 5px; }
+  .time-bar-day-label-weekday { font-size: 8px; }
+  .time-bar-day-label-num { font-size: 10px; }
+  .time-bar-day-num { font-size: 10px; min-width: 14px; }
+
+  .controls {
+    width: calc(100vw - 78px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+  }
+
+  .layer-sub-control { grid-template-columns: 72px 1fr auto; }
+
+  /* Keep the Wetter/time pill in the top-right on mobile so it reads
+     the same as desktop, but drop its z-index below the controls
+     panel — when the user opens the hamburger menu, the panel covers
+     the badge instead of the other way around, so the full menu width
+     stays usable. */
+  .status-badge {
+    min-width: 0;
+    z-index: 10;
+  }
+}
+
+
+/* ---- Location detail page ---- */
+.detail-page {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: var(--bg);
+  color: var(--text);
+  overflow-y: auto;
+  font-family: inherit;
+}
+.detail-page-header {
+  position: sticky;
+  top: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 14px 20px 10px;
+  background: var(--accent);
+  border-bottom: 2px solid var(--border);
+  z-index: 1;
+}
+.detail-page-header h1 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 400;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+}
+.detail-page-sub {
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--text-soft);
+}
+.detail-page-body {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 10px 20px 40px;
+}
+.detail-section h2 {
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  margin: 22px 0 6px;
+}
+.detail-panel {
+  background: var(--bg-surface);
+  border: 2px solid var(--border);
+  border-radius: 0;
+  box-shadow: var(--shadow-sm);
+  padding: 8px 10px 4px;
+  margin-bottom: 12px;
+}
+.detail-panel-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.detail-panel-unit {
+  opacity: 0.6;
+  font-weight: 400;
+}
+.detail-panel-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.detail-gridline {
+  stroke: rgba(234, 230, 217, 0.14);
+}
+.detail-gridline-h {
+  stroke: rgba(234, 230, 217, 0.08);
+}
+.detail-axis {
+  stroke: var(--border);
+}
+.detail-tick {
+  fill: var(--text-muted);
+  font-size: 10px;
+}
+.detail-legend {
+  font-size: 10px;
+}
+
+/* ---- Multi-model comparison (popup "Multi" tab + detail-page view) ---- */
+.multimodel-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  min-height: 16px;
+  margin: 2px 0 4px;
+}
+.multimodel-legend-item b {
+  font-weight: 600;
+}
+.multimodel-legend-time {
+  margin-left: auto;
+  color: var(--text-muted);
+}
+.multimodel-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+/* On the detail page the comparison sits in the same card chrome as the
+   overview panels. */
+.detail-page .multimodel {
+  background: var(--bg-surface);
+  border: 2px solid var(--border);
+  border-radius: 0;
+  box-shadow: var(--shadow-sm);
+  padding: 10px 12px 6px;
+  margin-top: 14px;
+}
+.detail-page .multimodel-legend {
+  font-size: 12px;
+}
+/* Barb strip on the detail page rides in a panel card too. */
+.detail-panel .wind-barbs {
+  margin: 0;
+}
+.point-popup-place-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-decoration-color: rgba(234, 230, 217, 0.4);
+  text-underline-offset: 3px;
+  /* Long place names ellipsize on one line instead of wrapping the header. */
+  display: inline-block;
+  max-width: min(200px, 44vw);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+}
+.point-popup-place-link:hover {
+  text-decoration-color: currentColor;
+}
+
+/* ---- Run browser (spec 04: the timerange explorer) ---- */
+.run-browser-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.run-browser {
+  background: var(--bg-surface);
+  color: var(--text);
+  border: 2px solid var(--border);
+  border-radius: 0;
+  width: min(560px, calc(100vw - 32px));
+  max-height: min(70vh, 640px);
+  overflow-y: auto;
+  padding: 12px 14px;
+  font-size: 13px;
+  box-shadow: var(--shadow-lg);
+}
+.run-browser-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.run-browser-title {
+  font-family: var(--display);
+  font-weight: 400;
+  text-transform: uppercase;
+}
+.run-browser-empty {
+  opacity: 0.7;
+  padding: 12px 4px;
+}
+.run-browser-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.run-browser-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: var(--bg-surface-2);
+  border: 2px solid var(--border);
+  border-radius: 0;
+  padding: 6px 8px;
+  color: inherit;
+  cursor: pointer;
+}
+.run-browser-row:hover {
+  background: var(--bg-hover);
+}
+.run-browser-row.active {
+  background: var(--accent-soft);
+  box-shadow: var(--shadow-sm);
+}
+.run-browser-run {
+  font-weight: 600;
+  white-space: nowrap;
+}
+.run-browser-window {
+  flex: 1;
+  opacity: 0.75;
+  font-size: 12px;
+}
+.run-browser-flag {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.8;
+  border: 2px solid var(--border);
+  border-radius: 0;
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+.run-browser-flag.complete {
+  background: var(--pop-green);
+  color: #141414;
+  opacity: 1;
+}
+.run-browser-coverage {
+  padding: 2px 8px 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.run-browser-var {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+.run-browser-var-name {
+  width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.8;
+}
+.run-browser-bar {
+  flex: 1;
+  height: 7px;
+  border-radius: 0;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  overflow: hidden;
+}
+.run-browser-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 0;
+}
+.run-browser-var-n {
+  width: 28px;
+  text-align: right;
+  opacity: 0.6;
+}
+.run-browser-more {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: var(--link);
+  font-weight: 700;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ---- Pinned-run chip (next to the model selector) ---- */
+.pinned-run-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 2px solid var(--border);
+  border-radius: 0;
+  padding: 2px 8px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: var(--shadow-sm);
+}
+.pinned-run-chip button {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  padding: 0;
+}
