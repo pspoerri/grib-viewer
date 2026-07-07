@@ -186,10 +186,19 @@ func (s *Server) modelDTO(id string) (*modelDTO, error) {
 	return md, nil
 }
 
-// appVersion derives a display version from the Go build info: the
-// short VCS revision (with a -dirty marker), the module version for
-// tagged module builds, or "dev" when nothing is stamped (`go run`).
+// version is stamped at build time by the Makefile/Dockerfile via
+// -ldflags "-X ...internal/api.version=$(git describe --tags --always --dirty)"
+// → e.g. v0.1.0-3-gd647711.
+var version string
+
+// appVersion prefers the stamped git-describe version, then falls
+// back to Go build info: the short VCS revision (with a -dirty
+// marker), the module version for tagged module builds, or "dev"
+// when nothing is stamped (`go run`).
 func appVersion() string {
+	if version != "" {
+		return version
+	}
 	bi, ok := debug.ReadBuildInfo()
 	if !ok {
 		return "dev"

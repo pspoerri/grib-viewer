@@ -1,6 +1,6 @@
 // wetter: standalone NWP GRIB viewer (specs in docs/specs/).
 //
-//	wetter serve --config wetter.yaml   HTTP API + configured fetch loops
+//	wetter serve --config wetter.yaml [--fetch]   HTTP API (+ fetch loops with --fetch)
 //	wetter fetch --config wetter.yaml [--once] [--source id]
 package main
 
@@ -33,6 +33,7 @@ func main() {
 	once := fs.Bool("once", false, "fetch: single pass, then exit")
 	sourceID := fs.String("source", "", "fetch/bench: only this source")
 	addr := fs.String("addr", "", "serve: listen address override")
+	fetchLoops := fs.Bool("fetch", false, "serve: run the fetch loops in-process")
 	noFetch := fs.Bool("no-fetch", false, "bench: reuse the existing buffer")
 	fs.Parse(os.Args[2:])
 
@@ -75,12 +76,16 @@ func main() {
 
 	case "serve":
 		eng := engine.New(buf, cfg.Cache.FieldsMB)
-		go orch.Run(ctx)
-		go func() {
-			for id := range orch.Changed() {
-				eng.InvalidateSource(id)
-			}
-		}()
+		// downloads are opt-in: by default serve only reads the
+		// existing buffer; run `wetter fetch` separately or pass --fetch
+		if *fetchLoops {
+			go orch.Run(ctx)
+			go func() {
+				for id := range orch.Changed() {
+					eng.InvalidateSource(id)
+				}
+			}()
+		}
 		srv := api.New(eng, cfg, func() any { return orch.Status() })
 		if static := webui.Handler(); static != nil {
 			srv.Static = static

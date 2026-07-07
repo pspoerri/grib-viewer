@@ -39,7 +39,9 @@ jobs:
             GOOS="${target%/*}" GOARCH="${target#*/}"
             echo "== $GOOS/$GOARCH"
             ( cd backend && CGO_ENABLED=0 GOOS="$GOOS" GOARCH="$GOARCH" \
-                go build -trimpath -ldflags="-s -w" -o ../out/wetter ./cmd/wetter )
+                go build -trimpath \
+                  -ldflags="-s -w -X github.com/pspoerri/wetter/internal/api.version=${TAG}" \
+                  -o ../out/wetter ./cmd/wetter )
             tar -czf "out/wetter_${TAG}_${GOOS}_${GOARCH}.tar.gz" \
                 -C out wetter -C .. wetter.yaml README.md
             rm out/wetter

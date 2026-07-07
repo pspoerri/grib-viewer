@@ -11,11 +11,14 @@ import (
 	"bytes"
 	"compress/gzip"
 	"embed"
+	"fmt"
+	"hash/fnv"
 	"io"
 	"io/fs"
 	"mime"
 	"net/http"
 	"path"
+	"strconv"
 	"strings"
 )
 
@@ -47,6 +50,12 @@ func (s *spa) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	data, err := fs.ReadFile(s.fs, p+".gz")
 	if err != nil {
+		// missing hashed assets 404 — a stale index.html must fail
+		// loudly, not execute the app shell as a script
+		if strings.HasPrefix(p, "assets/") {
+			http.NotFound(w, r)
+			return
+		}
 		// SPA fallback: unknown non-asset paths get the app shell
 		p = "index.html"
 		if data, err = fs.ReadFile(s.fs, p+".gz"); err != nil {
@@ -63,7 +72,17 @@ func (s *spa) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(p, "assets/") {
 		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
 	} else {
+		// no-cache alone forces a full refetch every load; with an
+		// ETag the browser revalidates and gets a 304 when unchanged
 		w.Header().Set("Cache-Control", "no-cache")
+		h := fnv.New64a()
+		h.Write(data)
+		etag := fmt.Sprintf("%q", strconv.FormatUint(h.Sum64(), 16))
+		w.Header().Set("ETag", etag)
+		if r.Header.Get("If-None-Match") == etag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 	}
 	w.Header().Add("Vary", "Accept-Encoding")
 

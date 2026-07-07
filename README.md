@@ -13,30 +13,133 @@ Specs live in `docs/specs/`; measured performance in
 
 ## Quick start
 
-Build the self-contained binary (pure Go, no CGO; the frontend is
-gzipped into it and served at `/`) and run it:
+Grab a self-contained binary (UI embedded, served at `/`) from the
+[GitHub releases](https://github.com/pspoerri/WETTER-viewer/releases),
+or build it yourself with `make release` (→ `bin/wetter`, see
+[Building from source](#building-from-source)). Then:
 
 ```bash
-make release
-./bin/wetter serve --config wetter.yaml
+# macOS only: downloaded binaries carry the quarantine flag — remove it first
+xattr -d com.apple.quarantine wetter
+
+./wetter serve --fetch --config wetter.yaml
 ```
 
 That's the whole deployment: UI + API + fetch loops on one port.
+Without `--fetch`, serve never downloads — it only reads the existing
+buffer (run `wetter fetch` separately, e.g. from a timer/cron).
 
-### Development
+## Fetching data
+
+Every source in `wetter.yaml` (spec 01) declares how it is fetched. A
+folder source indexes any `*.grib2` files by their message headers — no
+filename convention needed, synthetic/debug reference times display as
+lead hours (+0h, +6h, …).
+
+```yaml
+sources:
+  - id: icond2
+    type: dwd-opendata     # dwd-opendata | meteoswiss-stac | folder | http-index | s3
+    model: icon-d2         # path under opendata.dwd.de/weather/nwp/
+    fetch: loop            # loop  = refetch every `interval` (with `serve --fetch`)
+                           # once  = single pass at startup
+                           # off   = never fetch; serve whatever is buffered
+    interval: 15m
+    keep_runs: 2           # retention; older runs are pruned (0 = keep all)
+    variables: [t_2m, ...] # optional allowlist of upstream variable names
+    max_step: 48           # optional forecast-hour cap
+    info:                  # optional attribution block, served by /api/models
+      name: ICON-D2        # friendly name shown in the UI's model switcher
+      provider: Deutscher Wetterdienst (DWD)
+      provider_url: https://www.dwd.de/
+      license: DL-DE->BY-2.0
+```
+
+Commands:
 
 ```bash
-# backend only: API + fetch loops on :8080
-make serve
+# single pass over every source with fetch != off, then exit
+./bin/wetter fetch --config wetter.yaml --once      # = make fetch
 
-# frontend with hot reload on :5173, proxies /api to the backend
-make dev
+# single pass for one source (any fetch mode)
+./bin/wetter fetch --config wetter.yaml --source iconch1   # = make fetch-one SOURCE=iconch1
+
+# continuous fetch loops without the API server
+./bin/wetter fetch --config wetter.yaml
+```
+
+Downloads land under `data_dir/{source}/runs/{run}/` (decompressed
+GRIB + `index.json`); icosahedral coordinate companions (clat/clon)
+under `data_dir/{source}/static/`. Folder sources never copy — they
+index files where they live. The newest `keep_runs` runs are kept;
+`/api/models/{model}/runs` lists everything buffered.
+
+## Serving
+
+```bash
+# UI + API + fetch loops in-process, one port        (= make serve-fetch)
+./bin/wetter serve --fetch --config wetter.yaml
+
+# serve only (default): existing buffer, never downloads   (= make serve)
+./bin/wetter serve --config wetter.yaml
+
+# fetch progress / buffer state
+curl http://127.0.0.1:8080/api/status
+```
+
+### Map data sources
+
+The client reads all map data directly (no proxying needed). Both the
+basemap archive and the terrain server are configurable in
+`wetter.yaml` (served to the UI at `/api/mapconfig`; omit a field to
+keep the default):
+
+```yaml
+map:
+  pmtiles: "https://tiles.rsp.li/osm/{z}/{x}/{y}.pbf"
+  terrain: "https://tiles.mapterhorn.com/{z}/{x}/{y}.webp"
+```
+
+- **Basemap (OpenStreetMap vector data)** — `map.pmtiles` accepts two
+  forms: an XYZ tile URL template (the default above) or a
+  [Protomaps](https://protomaps.com)-style **`.pmtiles` archive** the
+  browser reads directly via HTTP range requests (CORS required), e.g.
+  `https://s.rsp.li/geodata/planet.pmtiles`. Fresh planet archives can
+  be downloaded from <https://maps.protomaps.com/builds/>; the
+  [self-hosting guide](https://docs.protomaps.com/guide/getting-started)
+  covers serving them. The five standard basemap flavors are generated
+  at runtime from [`@protomaps/basemaps`](https://www.npmjs.com/package/@protomaps/basemaps)
+  and split into below-drape fills and above-drape lines/labels; fonts
+  and sprites come from the official Protomaps assets
+  (`protomaps.github.io/basemaps-assets`).
+- **Terrain / 3D relief** — [Mapterhorn](https://mapterhorn.com) DEM
+  tiles, elevation from public-domain sources. `map.terrain` accepts the
+  same two forms: a tile URL template (its TileJSON is expected next to
+  the tiles at `{base}/tilejson.json`) or a terrarium-encoded
+  **`.pmtiles` archive** read via HTTP range requests — Mapterhorn
+  publishes downloadable planet archives.
+- **Place search** — `nominatim.openstreetmap.org`.
+
+## Deployment
+
+### Prebuilt binaries
+
+Releases (tags `v*`) ship self-contained binaries for macOS and Linux
+(amd64 + arm64) at
+<https://github.com/pspoerri/WETTER-viewer/releases>, built by
+`.github/workflows/release.yml`; CI runs vet, tests, and both builds on
+every push. On macOS the downloaded binary carries the quarantine
+attribute and must be cleared before it will run:
+
+```bash
+xattr -d com.apple.quarantine wetter
 ```
 
 ### Containers
 
 ```bash
-# UI + API on :8080, GRIB buffer in ./data (podman-compose or docker compose)
+# UI + API + fetch loops on :8080, GRIB buffer in ./data
+# (podman-compose or docker compose)
 make compose-up
 make compose-down
 ```
@@ -75,51 +178,30 @@ Two ways to satisfy that:
    different origin than the API does NOT work without a proxy — the
    relative `/api` calls would hit the static host.
 
-### Map data sources
+## Building from source
 
-The client reads all map data directly (no proxying needed). Both the
-basemap archive and the terrain server are configurable in
-`wetter.yaml` (served to the UI at `/api/mapconfig`; omit a field to
-keep the default):
+### Build dependencies
 
-```yaml
-map:
-  pmtiles: "https://tiles.rsp.li/osm/{z}/{x}/{y}.pbf"
-  terrain: "https://tiles.mapterhorn.com/{z}/{x}/{y}.webp"
-```
+- **Go ≥ 1.26** — <https://go.dev/dl/> or `brew install go` / distro package
+- **Node.js ≥ 22 with pnpm** — <https://nodejs.org/>; pnpm ships with
+  Node's corepack: `corepack enable`
+- **git** — version stamping (`git describe`); builds without it but
+  the UI then shows version `dev`
+- **GNU make, gzip** — preinstalled on macOS and Linux
+- **docker compose or podman-compose** — only for `make compose-up`;
+  the container build needs no local Go/Node toolchain
 
-- **Basemap (OpenStreetMap vector data)** — `map.pmtiles` accepts two
-  forms: an XYZ tile URL template (the default above) or a
-  [Protomaps](https://protomaps.com)-style **`.pmtiles` archive** the
-  browser reads directly via HTTP range requests (CORS required), e.g.
-  `https://s.rsp.li/geodata/planet.pmtiles`. Fresh planet archives can
-  be downloaded from <https://maps.protomaps.com/builds/>; the
-  [self-hosting guide](https://docs.protomaps.com/guide/getting-started)
-  covers serving them. The five standard basemap flavors are generated
-  at runtime from [`@protomaps/basemaps`](https://www.npmjs.com/package/@protomaps/basemaps)
-  and split into below-drape fills and above-drape lines/labels; fonts
-  and sprites come from the official Protomaps assets
-  (`protomaps.github.io/basemaps-assets`).
-- **Terrain / 3D relief** — [Mapterhorn](https://mapterhorn.com) DEM
-  tiles, elevation from public-domain sources. `map.terrain` accepts the
-  same two forms: a tile URL template (its TileJSON is expected next to
-  the tiles at `{base}/tilejson.json`) or a terrarium-encoded
-  **`.pmtiles` archive** read via HTTP range requests — Mapterhorn
-  publishes downloadable planet archives.
-- **Place search** — `nominatim.openstreetmap.org`.
+`make release` builds the self-contained binary (pure Go, no CGO; the
+frontend is gzipped into it and served at `/`) as `bin/wetter`.
 
-Releases (tags `v*`) ship self-contained binaries for macOS and Linux
-(amd64 + arm64) via `.github/workflows/release.yml`; CI runs vet,
-tests, and both builds on every push.
-
-`wetter.yaml` configures the sources (spec 01). A folder source
-indexes any `*.grib2` files by their message headers — no filename
-convention needed, synthetic/debug reference times display as lead
-hours (+0h, +6h, …).
+### Development
 
 ```bash
-# one fetch pass into the buffer, no server
-make fetch
+# backend only: API on :8080, existing buffer (make serve-fetch to download too)
+make serve
+
+# frontend with hot reload on :5173, proxies /api to the backend
+make dev
 
 # end-to-end benchmark against real DWD data (EPS: make bench-eps)
 make bench
@@ -131,51 +213,6 @@ make smoke
 make test
 make ci
 ```
-
-## Fetching data
-
-Every source in `wetter.yaml` declares how it is fetched:
-
-```yaml
-sources:
-  - id: icond2
-    type: dwd-opendata     # dwd-opendata | meteoswiss-stac | folder | http-index | s3
-    model: icon-d2         # path under opendata.dwd.de/weather/nwp/
-    fetch: loop            # loop  = refetch every `interval` (inside `wetter serve`)
-                           # once  = single pass at startup
-                           # off   = never fetch; serve whatever is buffered
-    interval: 15m
-    keep_runs: 2           # retention; older runs are pruned (0 = keep all)
-    variables: [t_2m, ...] # optional allowlist of upstream variable names
-    max_step: 48           # optional forecast-hour cap
-    info:                  # optional attribution block, served by /api/models
-      name: ICON-D2        # friendly name shown in the UI's model switcher
-      provider: Deutscher Wetterdienst (DWD)
-      provider_url: https://www.dwd.de/
-      license: DL-DE->BY-2.0
-```
-
-Commands:
-
-```bash
-# single pass over every source with fetch != off, then exit
-./bin/wetter fetch --config wetter.yaml --once      # = make fetch
-
-# single pass for one source (any fetch mode)
-./bin/wetter fetch --config wetter.yaml --source iconch1   # = make fetch-one SOURCE=iconch1
-
-# continuous fetch loops without the API server
-./bin/wetter fetch --config wetter.yaml
-
-# `wetter serve` runs the loops in-process; watch progress at
-curl http://127.0.0.1:8080/api/status
-```
-
-Downloads land under `data_dir/{source}/runs/{run}/` (decompressed
-GRIB + `index.json`); icosahedral coordinate companions (clat/clon)
-under `data_dir/{source}/static/`. Folder sources never copy — they
-index files where they live. The newest `keep_runs` runs are kept;
-`/api/models/{model}/runs` lists everything buffered.
 
 ## Layer presets
 

@@ -7,7 +7,7 @@
 #                         "Hosting the frontend as static pages" in README.md
 #
 # Development:
-#   make serve            backend API + fetch loops on $(ADDR)
+#   make serve            backend API on $(ADDR) (fetch loops: make serve-fetch)
 #   make dev              frontend dev server on :5173 (proxies /api to $(ADDR))
 #   make ci               full local gate before pushing
 #
@@ -27,15 +27,19 @@ SOURCE  ?= icond2
 # selects its pure-Go decoder and keeps builds host-independent.
 export CGO_ENABLED = 0
 
+# vX.Y.Z-N-g<sha>[-dirty]: latest tag + commits since, shown in the UI
+VERSION ?= $(shell git describe --tags --always --dirty)
+LDFLAGS  = -X github.com/pspoerri/wetter/internal/api.version=$(VERSION)
+
 WEBUI_DIST = backend/internal/webui/dist
 
-.PHONY: help build release embed-frontend serve fetch fetch-one dev test vet lint frontend ci bench bench-eps smoke compose-up compose-down clean
+.PHONY: help build release embed-frontend serve serve-fetch fetch fetch-one dev test vet lint frontend ci bench bench-eps smoke compose-up compose-down clean
 
 help:                   ## list targets with their descriptions
 	@awk -F':.*## ' '/^[a-z-]+:.*## / {printf "  %-16s %s\n", $$1, $$2}' Makefile
 
 build:                  ## backend binary only (no embedded UI; API-only at /)
-	cd backend && $(GO) build -o ../$(BIN_DIR)/wetter ./cmd/wetter
+	cd backend && $(GO) build -ldflags="$(LDFLAGS)" -o ../$(BIN_DIR)/wetter ./cmd/wetter
 
 # gzip the frontend production build into the embed dir (only .gz
 # variants ship — the server decompresses for non-gzip clients)
@@ -47,11 +51,14 @@ embed-frontend: frontend ## stage frontend/dist into the Go embed dir (gzipped)
 	touch $(WEBUI_DIST)/.gitkeep
 
 release: embed-frontend ## self-contained binary: API + embedded frontend at /
-	cd backend && CGO_ENABLED=0 $(GO) build -trimpath -ldflags="-s -w" -o ../$(BIN_DIR)/wetter ./cmd/wetter
+	cd backend && CGO_ENABLED=0 $(GO) build -trimpath -ldflags="-s -w $(LDFLAGS)" -o ../$(BIN_DIR)/wetter ./cmd/wetter
 	@ls -lh $(BIN_DIR)/wetter
 
-serve: build            ## API + configured fetch loops on $(ADDR)
+serve: build            ## API on $(ADDR), existing buffer only (no downloads)
 	./$(BIN_DIR)/wetter serve --config $(CONFIG) --addr $(ADDR)
+
+serve-fetch: build      ## API on $(ADDR) + configured fetch loops in-process
+	./$(BIN_DIR)/wetter serve --fetch --config $(CONFIG) --addr $(ADDR)
 
 fetch: build            ## one fetch pass over all sources, then exit
 	./$(BIN_DIR)/wetter fetch --config $(CONFIG) --once
@@ -72,7 +79,7 @@ lint: vet               ## vet + eslint + frontend unit tests
 	cd frontend && pnpm run lint
 
 frontend:               ## static UI bundle (frontend/dist/) for any static host
-	cd frontend && pnpm install && pnpm run build
+	cd frontend && pnpm install --frozen-lockfile && pnpm run build
 
 ci: vet test frontend   ## full local gate (vet + tests + frontend build)
 
@@ -92,7 +99,7 @@ smoke: build            ## live end-to-end smoke test (scripts/smoke.sh)
 COMPOSE ?= $(shell command -v podman-compose >/dev/null 2>&1 && echo podman-compose || echo docker compose)
 
 compose-up:             ## UI+API container on :8080, GRIB buffer in ./data
-	$(COMPOSE) up -d --build
+	VERSION=$(VERSION) $(COMPOSE) up -d --build
 
 compose-down:           ## stop the container stack
 	$(COMPOSE) down

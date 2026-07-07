@@ -5,7 +5,10 @@
 # ./data` lands on the host folder. UI + API on http://localhost:8080.
 services:
   wetter:
-    build: .
+    build:
+      context: .
+      args:
+        VERSION: ${VERSION:-dev}  # git describe, set by `make compose-up`
     image: wetter:latest
     ports:
       - "8080:8080"
