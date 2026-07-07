@@ -249,6 +249,10 @@ export default function TimeBar({
     // forward by the freeze duration so the playhead resumes from
     // exactly where it paused (no jump-ahead at fast cadences).
     let frozenSinceMs = 0;
+    // Last time we kicked waitForFrameReady for the current freeze; re-armed
+    // every 2s so a failed or aborted prefetch (network hiccup, viewport
+    // churn, server restart) can't wedge playback in a permanent freeze.
+    let lastReadyKickMs = 0;
     let rafId = 0;
     let cancelled = false;
     // Recently-fired integer frames (values we pushed via
@@ -301,14 +305,20 @@ export default function TimeBar({
         (handle?.isFrameReady(nextInt) ?? true);
 
       if (!ready) {
+        const now = performance.now();
         if (frozenSinceMs === 0) {
-          frozenSinceMs = performance.now();
+          frozenSinceMs = now;
           onFrameLoadingChangeRef.current?.(true);
-          // Kick a one-shot async wait so each driver's readyListeners
-          // fire as soon as the missing chunk lands. Per-driver
-          // timeouts inside ensure a stuck request can't wedge play.
-          // The actual unfreeze happens in the readiness-true branch
-          // below — re-checked on every rAF tick.
+        }
+        // Kick an async wait so each driver's readyListeners fire as
+        // soon as the missing chunk lands, re-armed every 2s for the
+        // life of the freeze: waitForFrameReady re-issues the missing
+        // fetches, so a failed or aborted prefetch retries instead of
+        // wedging playback in a permanent freeze. The actual unfreeze
+        // happens in the readiness-true branch below — re-checked on
+        // every rAF tick.
+        if (now - lastReadyKickMs >= 2000) {
+          lastReadyKickMs = now;
           void handle?.waitForFrameReady(nextInt, 8000);
         }
         // Hold the playhead exactly at the current integer (no

@@ -858,6 +858,7 @@ const WeatherMapV2 = forwardRef<WeatherMapHandle, Props>(function WeatherMapV2(
     if (!map || baseMapRef.current === props.baseMap) return;
     baseMapRef.current = props.baseMap;
     const reinit = () => {
+      const wasPlaying = mgrRef.current?.isPlaying() ?? false;
       mgrRef.current?.dispose();
       const mgr = new WxLayerManager(
         map,
@@ -866,6 +867,7 @@ const WeatherMapV2 = forwardRef<WeatherMapHandle, Props>(function WeatherMapV2(
       );
       mgr.setHdr(p.current.hdr);
       mgr.setPinnedRun(p.current.selectedModel, p.current.selectedRun ?? "");
+      mgr.setPlaying(wasPlaying);
       mgrRef.current = mgr;
       if (import.meta.env.DEV) {
         // Keep the dev probe handle on the LIVE manager — a basemap change

@@ -130,6 +130,15 @@ func (e *Engine) heightPlane(rv *runView, reg region) []float32 {
 			} else if l, ok := pm.byMember[0]; ok {
 				loc = l
 			} else {
+				// EPS time-invariant fields carry a perturbation number
+				// (DWD stamps member 1); terrain is member-invariant, so
+				// any member's hsurf works
+				for _, l := range pm.byMember {
+					loc = l
+					break
+				}
+			}
+			if loc.Path == "" {
 				continue
 			}
 			p, err := e.renderMemberCached(rv, "hsurf", loc, -1, time.Unix(ts, 0).UTC(), reg)

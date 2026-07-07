@@ -564,6 +564,13 @@ export class WxLayerManager {
     if (playing) this.prefetchAround(Math.floor(this.playhead));
   }
 
+  /** Current playback flag — lets a manager rebuild (basemap swap) carry it
+   *  over; a fresh manager defaulting to false would silently stop the
+   *  prefetch lookahead and wedge the play loop's readiness gate. */
+  isPlaying(): boolean {
+    return this.playing;
+  }
+
   /** Is every visible unit's window for global frame `f` already decoded+cached?
    *  TimeBar gates the playhead on this so playback never tweens into half-loaded
    *  data. A unit whose meta hasn't resolved yet counts as not-ready. */
@@ -1059,13 +1066,14 @@ export class WxLayerManager {
       if (!meta) continue;
       if (!this.inDomain(u, vp.bbox)) continue; // off-screen contributor
       if (this.windowDropped(u)) continue; // sits out the active window block
-      // Uncached, not-in-flight native frames in (f0, f0+CHUNK_AHEAD].
+      // Uncached, not-in-flight native frames in (f0, f0+CHUNK_AHEAD],
+      // wrapping past the end so the loop restart (frame 0) is already
+      // warm when playback wraps — long timelines evict it by then.
       const tis: number[] = [];
-      for (let d = 1; d <= CHUNK_AHEAD; d++) {
-        const f = f0 + d;
-        if (f >= N) break;
+      for (let d = 1; d <= Math.min(CHUNK_AHEAD, N - 1); d++) {
+        const f = (f0 + d) % N;
         const ti = this.nativeTi(meta, f);
-        if (ti < 0 || tis[tis.length - 1] === ti) continue;
+        if (ti < 0 || tis.includes(ti)) continue;
         const key = this.cacheKey(u, vp.bbox, ti);
         if (this.winCache.has(key) || this.winInflight.has(key)) continue;
         tis.push(ti);
