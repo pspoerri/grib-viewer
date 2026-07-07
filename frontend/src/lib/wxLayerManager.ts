@@ -289,6 +289,46 @@ export class WxLayerManager {
     this.onLoading = onLoading;
     this.onDemAvailability = onDemAvailability;
     map.on("moveend", this.onMove);
+    this.runWatchTimer = window.setInterval(() => void this.checkLatestRuns(), 60_000);
+  }
+
+  // Latest-run watchdog: meta and window caches are keyed "latest" and would
+  // otherwise serve a superseded run forever in a long-open tab (or when
+  // switching back to a previously viewed source) — only a reload flushed
+  // them. Poll each visible model's meta once a minute; on a run flip drop
+  // that model's cached meta + windows and re-render.
+  private runWatchTimer = 0;
+  private seenRun = new Map<string, string>(); // model → last seen run id
+
+  private async checkLatestRuns(): Promise<void> {
+    const byModel = new Map<string, string>(); // model → a variable to probe with
+    for (const u of this.units) byModel.set(u.model, u.layer.variable);
+    for (const model of byModel.keys()) {
+      if (this.runFor(model)) continue; // pinned run — immutable by definition
+      let run: string | undefined;
+      try {
+        run = (await fetchV2Meta(model, byModel.get(model)!)).run;
+      } catch {
+        continue; // transient — retry next tick
+      }
+      if (!run) continue;
+      const prev = this.seenRun.get(model);
+      this.seenRun.set(model, run);
+      if (!prev || prev === run) continue;
+      for (const key of [...this.winCache.keys()]) {
+        if (key.startsWith(model + "|")) this.winCache.delete(key);
+      }
+      for (const key of [...this.meta.keys()]) {
+        if (key.startsWith(model + "/")) this.meta.delete(key);
+      }
+      for (const u of this.units) {
+        if (u.model === model) this.metaResolved.delete(u.key);
+      }
+      for (const u of this.flowUnits) {
+        if (u.model === model) this.flowMetaResolved.delete(u.model);
+      }
+      this.scheduleApply();
+    }
   }
 
   /** HDR toggle: double the /data cell budget (the server picks a finer
@@ -344,6 +384,7 @@ export class WxLayerManager {
     this.map.off("moveend", this.onMove);
     if (this.applyRaf) cancelAnimationFrame(this.applyRaf);
     if (this.moveTimer) window.clearTimeout(this.moveTimer);
+    window.clearInterval(this.runWatchTimer);
     for (const rec of this.activeFetches) rec.ac.abort();
     this.activeFetches.clear();
     this.demWin.clear();
