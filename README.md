@@ -1,5 +1,8 @@
 # WETTER-viewer
 
+Note: **This project is 100% AI generated.
+No guarantees. Best effort has been taken to validate the project.**
+
 Standalone viewer for NWP GRIB output. Point it at DWD opendata, the
 MeteoSwiss STAC, an S3 bucket, a web host, or a plain run-output
 folder — it buffers the GRIB locally and derives **everything online**
