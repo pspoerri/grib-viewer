@@ -91,7 +91,7 @@ func (s *Server) compositeModelDTO(id string) *modelDTO {
 		return nil
 	}
 	md := &modelDTO{ID: id, LatestRun: s.compositeRunID(id), Contributors: ids}
-	md.Provider = "WETTER-viewer"
+	md.Provider = "GRIB-viewer"
 	md.License = "Derived work — see contributors"
 	if id == "auto_eps" {
 		md.Name = "Auto ensemble"

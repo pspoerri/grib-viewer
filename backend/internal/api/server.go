@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -145,9 +146,36 @@ type gzipWriter struct {
 
 func (w *gzipWriter) Write(p []byte) (int, error) { return w.gz.Write(p) }
 
+// acceptsGzip reports whether gzip is an acceptable content coding. A
+// substring check is insufficient: Accept-Encoding values are
+// case-insensitive token lists and "gzip;q=0" explicitly rejects gzip.
+func acceptsGzip(header string) bool {
+	for _, item := range strings.Split(header, ",") {
+		parts := strings.Split(item, ";")
+		if len(parts) == 0 || !strings.EqualFold(strings.TrimSpace(parts[0]), "gzip") {
+			continue
+		}
+		q := 1.0
+		for _, param := range parts[1:] {
+			key, value, ok := strings.Cut(strings.TrimSpace(param), "=")
+			if !ok || !strings.EqualFold(strings.TrimSpace(key), "q") {
+				continue
+			}
+			parsed, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
+			if err != nil {
+				return false
+			}
+			q = parsed
+		}
+		return q > 0
+	}
+	return false
+}
+
 func withGzip(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+		w.Header().Add("Vary", "Accept-Encoding")
+		if !acceptsGzip(r.Header.Get("Accept-Encoding")) {
 			next.ServeHTTP(w, r)
 			return
 		}

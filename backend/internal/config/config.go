@@ -14,13 +14,14 @@ type Config struct {
 	Listen      string   `yaml:"listen"`
 	DataDir     string   `yaml:"data_dir"`
 	CORSOrigins []string `yaml:"cors_origins"`
+	GeocoderURL string   `yaml:"geocoder_url"`
 	Cache       Cache    `yaml:"cache"`
 	Map         MapData  `yaml:"map"`
 	Sources     []Source `yaml:"sources"`
 	Presets     []Preset `yaml:"presets"`
 }
 
-// MapData points the UI at its basemap/terrain data, served verbatim by
+// MapData points the UI at its basemap/terrain data, included in
 // /api/mapconfig. Load() fills defaults for absent fields, so the
 // config is the single source of truth — the frontend's hardcoded
 // copies only apply when no backend is reachable at all (static-only
@@ -52,9 +53,9 @@ type Preset struct {
 	// here. Any other (or absent) id lists the preset in the ⭐ strip.
 	ID          string `yaml:"id" json:"id,omitempty"`
 	Name        string `yaml:"name" json:"name"`
-	Icon        string `yaml:"icon" json:"icon"`               // emoji glyph for the picker (default ⭐)
+	Icon        string `yaml:"icon" json:"icon"` // emoji glyph for the picker (default ⭐)
 	Description string `yaml:"description" json:"description,omitempty"`
-	Layers      string `yaml:"layers" json:"layers"`             // e.g. "vmax_10m.t.10.ga,!pmsl.c.10"
+	Layers      string `yaml:"layers" json:"layers"`               // e.g. "vmax_10m.t.10.ga,!pmsl.c.10"
 	BaseMap     string `yaml:"base_map" json:"base_map,omitempty"` // optional basemap override
 }
 
@@ -107,8 +108,23 @@ func Load(path string) (*Config, error) {
 	if err := dec.Decode(cfg); err != nil {
 		return nil, fmt.Errorf("config %s: %w", path, err)
 	}
+	// KeepRuns uses zero as a meaningful value (keep everything), so the
+	// decoded int alone cannot distinguish an omitted key from an explicit
+	// `keep_runs: 0`. Decode just that key a second time as a pointer; the
+	// strict full decode above remains authoritative for validation.
+	var presence struct {
+		Sources []struct {
+			KeepRuns *int `yaml:"keep_runs"`
+		} `yaml:"sources"`
+	}
+	if err := yaml.Unmarshal(raw, &presence); err != nil {
+		return nil, fmt.Errorf("config %s: %w", path, err)
+	}
 	if cfg.DataDir == "" {
 		cfg.DataDir = "./data"
+	}
+	if cfg.GeocoderURL == "" {
+		cfg.GeocoderURL = "https://nominatim.openstreetmap.org"
 	}
 	if cfg.Map.PMTiles == "" {
 		cfg.Map.PMTiles = "https://tiles.rsp.li/osm/{z}/{x}/{y}.pbf"
@@ -137,7 +153,7 @@ func Load(path string) (*Config, error) {
 		if s.Interval == 0 {
 			s.Interval = 15 * time.Minute
 		}
-		if s.KeepRuns == 0 {
+		if i >= len(presence.Sources) || presence.Sources[i].KeepRuns == nil {
 			s.KeepRuns = 2
 		}
 	}

@@ -1,6 +1,7 @@
 # grib-viewer example config (spec 01). `grib-viewer serve --config grib-viewer.yaml`
 listen: :8080
 data_dir: ./data
+geocoder_url: https://nominatim.openstreetmap.org
 cache:
   fields_mb: 4096
 

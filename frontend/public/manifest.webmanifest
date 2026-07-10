@@ -1,6 +1,6 @@
 {
-  "name": "WETTER-viewer",
-  "short_name": "WETTER",
+  "name": "GRIB Viewer",
+  "short_name": "GRIB",
   "display": "standalone",
   "background_color": "#111013",
   "theme_color": "#111013",

@@ -8,10 +8,15 @@ import {
   kindBBox,
   NOMINATIM_BASE,
   SEARCH_URL,
+  setNominatimBase,
 } from "../src/api/geocode.ts";
 
 test("search URL derives from the configurable Nominatim base", () => {
   assert.equal(SEARCH_URL, `${NOMINATIM_BASE}/search`);
+  setNominatimBase("https://geo.example.test/nominatim/");
+  assert.equal(NOMINATIM_BASE, "https://geo.example.test/nominatim");
+  assert.equal(SEARCH_URL, "https://geo.example.test/nominatim/search");
+  setNominatimBase("https://nominatim.openstreetmap.org");
 });
 
 test("trimDisplayName keeps the first two comma segments", () => {

@@ -171,6 +171,8 @@ export function createLayer(
     gpuAnim: opts?.gpuAnim,
     colormap: opts?.colormap,
     stepped: opts?.stepped,
+    interp: opts?.interp,
+    aggOp: opts?.aggOp,
     flowParticles: opts?.flowParticles,
     flowSpeed: opts?.flowSpeed,
     flowWidth: opts?.flowWidth,
@@ -1080,6 +1082,12 @@ export function decodeLayerSegment(seg: string): MapLayer | null {
       layer.contourColor = `#${p.slice(1)}`;
     } else if (p.startsWith("w")) {
       layer.contourWidth = parseFloat(p.slice(1));
+    } else if (p === "st1") {
+      // Exact stepped/smooth tokens must precede the generic grid-spacing
+      // `s` prefix below.
+      layer.stepped = true;
+    } else if (p === "st0") {
+      layer.stepped = false;
     } else if (p.startsWith("s")) {
       layer.gridSpacing = parseInt(p.slice(1), 10);
     } else if (p.startsWith("k")) {
@@ -1104,10 +1112,6 @@ export function decodeLayerSegment(seg: string): MapLayer | null {
     } else if (p === "ne") {
       // Legacy hash token: per-layer EPS opt-out, removed with the
       // global Baseline picker. Silently discarded so old links load.
-    } else if (p === "st1") {
-      layer.stepped = true;
-    } else if (p === "st0") {
-      layer.stepped = false;
     } else if (p.startsWith("ao")) {
       layer.aggOp = p.slice(2) as AggOp;
     } else if (p === "det") {

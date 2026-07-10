@@ -123,6 +123,25 @@ test("hash round-trips windowMode + anchor + per-layer agg op", () => {
   assert.equal(parsed?.anchor, "2026-06-13T00:00:00Z");
 });
 
+test("layer hash round-trips stepped and smooth overrides", () => {
+  for (const stepped of [true, false]) {
+    const layer = { ...createLayer("t_2m", "tiles"), stepped };
+    const hash = encodeMapHash({ model: "icond2", layers: [layer] });
+    const parsed = decodeMapHash(hash);
+    assert.equal(parsed?.layers[0].stepped, stepped);
+    assert.equal(parsed?.layers[0].gridSpacing, undefined);
+  }
+});
+
+test("createLayer preserves aggregation and interpolation options", () => {
+  const layer = createLayer("t_2m", "tiles", {
+    aggOp: "min",
+    interp: 2,
+  });
+  assert.equal(layer.aggOp, "min");
+  assert.equal(layer.interp, 2);
+});
+
 test("hash round-trips the pinned run + lead time format", () => {
   const layer = createLayer("t_2m", "tiles");
   const hash = encodeMapHash({

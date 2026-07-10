@@ -9,6 +9,7 @@ import { loadColormaps } from "./lib/colormap";
 import { loadColormaps2 } from "./lib/wxColormap2";
 import { setBasemapTiles } from "./lib/basemapStyle";
 import { setTerrainTiles } from "./lib/terrainZsite";
+import { setNominatimBase } from "./api/geocode";
 
 // Register the pmtiles protocol once at startup so any `pmtiles://` URL
 // — including those referenced by WeatherMap's terrain `mapterhorn://`
@@ -17,16 +18,21 @@ import { setTerrainTiles } from "./lib/terrainZsite";
 export const pmtilesProtocol = new Protocol();
 maplibregl.addProtocol("pmtiles", pmtilesProtocol.tile);
 
-// Map data sources are configurable (grib-viewer.yaml `map:` block, served
-// at /api/mapconfig). Applied via top-level await BEFORE the app
+// Browser-side data sources are configurable (grib-viewer.yaml `map:` block
+// and `geocoder_url`, served at /api/mapconfig). Applied via top-level await BEFORE the app
 // renders so nothing constructs a style or map against the built-in
 // defaults first; absent fields / a failed fetch keep the defaults.
 try {
   const res = await fetch("/api/mapconfig");
   if (res.ok) {
-    const cfg = (await res.json()) as { pmtiles?: string; terrain?: string };
+    const cfg = (await res.json()) as {
+      pmtiles?: string;
+      terrain?: string;
+      geocoder_url?: string;
+    };
     if (cfg.pmtiles) setBasemapTiles(cfg.pmtiles);
     if (cfg.terrain) await setTerrainTiles(cfg.terrain);
+    if (cfg.geocoder_url) setNominatimBase(cfg.geocoder_url);
   }
 } catch {
   // backend unreachable — built-in map data sources

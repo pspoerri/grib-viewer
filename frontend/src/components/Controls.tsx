@@ -584,11 +584,11 @@ export default function Controls({
         <section className="controls-about">
           <a
             className="controls-github"
-            href="https://github.com/pspoerri/WETTER-viewer"
+            href="https://github.com/pspoerri/grib-viewer"
             target="_blank"
             rel="noopener noreferrer"
           >
-            WETTER-viewer on GitHub
+            GRIB-viewer on GitHub
           </a>
           <AppVersion />
         </section>

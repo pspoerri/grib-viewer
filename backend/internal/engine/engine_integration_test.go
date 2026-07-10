@@ -11,13 +11,17 @@ import (
 	"github.com/pspoerri/grib-viewer/internal/gribidx"
 )
 
-// Integration test against real GRIB fixtures. Set WETTER_FIXTURE_DIR
+// Integration test against real GRIB fixtures. Set GRIB_VIEWER_FIXTURE_DIR
 // to a directory containing *.grib2 files (e.g. one t_2m + one
-// tot_prec ICON-D2 message file); skipped otherwise.
+// tot_prec ICON-D2 message file); skipped otherwise. WETTER_FIXTURE_DIR
+// remains a compatibility fallback for pre-rename environments.
 func TestEngineRealGRIB(t *testing.T) {
-	dir := os.Getenv("WETTER_FIXTURE_DIR")
+	dir := os.Getenv("GRIB_VIEWER_FIXTURE_DIR")
 	if dir == "" {
-		t.Skip("WETTER_FIXTURE_DIR not set")
+		dir = os.Getenv("WETTER_FIXTURE_DIR")
+	}
+	if dir == "" {
+		t.Skip("GRIB_VIEWER_FIXTURE_DIR not set")
 	}
 	paths, _ := filepath.Glob(filepath.Join(dir, "*.grib2"))
 	if len(paths) == 0 {

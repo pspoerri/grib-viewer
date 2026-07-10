@@ -1,8 +1,5 @@
 # GRIB-viewer
 
-Note: **This project is 100% AI generated.
-No guarantees. Best effort has been taken to validate the project.**
-
 Standalone viewer for NWP GRIB output. Point it at DWD opendata, the
 MeteoSwiss STAC, an S3 bucket, a web host, or a plain run-output
 folder — it buffers the GRIB locally and derives **everything online**
@@ -17,7 +14,7 @@ Specs live in `docs/specs/`; measured performance in
 ## Quick start
 
 Grab a self-contained binary (UI embedded, served at `/`) from the
-[GitHub releases](https://github.com/pspoerri/WETTER-viewer/releases),
+[GitHub releases](https://github.com/pspoerri/grib-viewer/releases),
 or build it yourself with `make release` (→ `bin/grib-viewer`, see
 [Building from source](#building-from-source)). Then:
 
@@ -100,6 +97,7 @@ basemap archive and the terrain server are configurable in
 keep the default):
 
 ```yaml
+geocoder_url: "https://nominatim.openstreetmap.org"
 map:
   pmtiles: "https://tiles.rsp.li/osm/{z}/{x}/{y}.pbf"
   terrain: "https://tiles.mapterhorn.com/{z}/{x}/{y}.webp"
@@ -123,7 +121,8 @@ map:
   the tiles at `{base}/tilejson.json`) or a terrarium-encoded
   **`.pmtiles` archive** read via HTTP range requests — Mapterhorn
   publishes downloadable planet archives.
-- **Place search** — `nominatim.openstreetmap.org`.
+- **Place search** — `geocoder_url` selects the Nominatim-compatible
+  `/search` and `/reverse` base URL, so a self-hosted instance can be used.
 
 ## Deployment
 
@@ -131,7 +130,7 @@ map:
 
 Releases (tags `v*`) ship self-contained binaries for macOS and Linux
 (amd64 + arm64) at
-<https://github.com/pspoerri/WETTER-viewer/releases>, built by
+<https://github.com/pspoerri/grib-viewer/releases>, built by
 `.github/workflows/release.yml`; CI runs vet, tests, and both builds on
 every push. On macOS the downloaded binary carries the quarantine
 attribute and must be cleared before it will run:

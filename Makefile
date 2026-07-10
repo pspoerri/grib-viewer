@@ -1,4 +1,4 @@
-# WETTER-viewer build entry points. `make help` lists all targets.
+# GRIB-viewer build entry points. `make help` lists all targets.
 #
 # Deployment:
 #   make release          ONE self-contained binary: UI embedded, served at /

@@ -229,11 +229,13 @@ func (s *Server) handleVersion(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, map[string]string{"version": appVersion()})
 }
 
-// handleMapConfig serves the config's map-data URLs (pmtiles basemap
-// archive, terrain tile server); the UI applies them before the map
-// mounts, keeping built-in defaults for absent fields.
+// handleMapConfig serves browser-side external data URLs. The UI applies
+// them before it mounts, keeping built-in defaults for absent fields.
 func (s *Server) handleMapConfig(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, 200, s.Cfg.Map)
+	writeJSON(w, 200, struct {
+		config.MapData
+		GeocoderURL string `json:"geocoder_url,omitempty"`
+	}{MapData: s.Cfg.Map, GeocoderURL: s.Cfg.GeocoderURL})
 }
 
 // handlePresets serves the config's server-defined layer presets
@@ -484,7 +486,7 @@ func (s *Server) parseDataReq(w http.ResponseWriter, r *http.Request, singleFram
 	}
 	// cache headers for immutable addressing
 	if runID != "" && !ts.Latest && !ts.Now {
-		etag := fmt.Sprintf("%q", info.RunID+"|"+r.URL.RequestURI())
+		etag := dataETag(info.RunID, r.URL.RequestURI(), r.Header.Get("Accept-Encoding"))
 		if r.Header.Get("If-None-Match") == etag {
 			w.WriteHeader(http.StatusNotModified)
 			return nil
@@ -494,6 +496,14 @@ func (s *Server) parseDataReq(w http.ResponseWriter, r *http.Request, singleFram
 	}
 	w.Header().Set("X-Model-Run", info.RunID)
 	return &dataReq{model: model, runID: info.RunID, vr: vr, frames: frames, info: info}
+}
+
+func dataETag(runID, requestURI, acceptEncoding string) string {
+	encoding := "identity"
+	if acceptsGzip(acceptEncoding) {
+		encoding = "gzip"
+	}
+	return fmt.Sprintf("%q", runID+"|"+requestURI+"|"+encoding)
 }
 
 func bboxParam(r *http.Request) ([4]float64, error) {

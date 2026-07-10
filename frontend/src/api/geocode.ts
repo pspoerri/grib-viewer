@@ -4,11 +4,18 @@
 // render path, and let labels pop in late. Requests are debounced by the
 // callers per the Nominatim usage policy.
 
-/** Nominatim base URL. Override for a self-hosted instance. */
-export const NOMINATIM_BASE = "https://nominatim.openstreetmap.org";
+/** Nominatim base URL. Set from /api/mapconfig before the app mounts. */
+export let NOMINATIM_BASE = "https://nominatim.openstreetmap.org";
 
 /** Forward-search endpoint (`{base}/search?q=&format=jsonv2&limit=8&addressdetails=0`). */
-export const SEARCH_URL = `${NOMINATIM_BASE}/search`;
+export let SEARCH_URL = `${NOMINATIM_BASE}/search`;
+
+export function setNominatimBase(base: string): void {
+  const normalized = base.trim().replace(/\/+$/, "");
+  if (!normalized) return;
+  NOMINATIM_BASE = normalized;
+  SEARCH_URL = `${normalized}/search`;
+}
 
 export interface SearchResult {
   /** [lon, lat] */
