@@ -55,6 +55,21 @@ type VarInfo struct {
 	Level      int
 }
 
+// ProductCapabilities describes the ensemble products a variable can actually
+// serve for a run. Members is the largest addressable ensemble size backing the
+// product; Chance reports whether member-wise threshold reduction is supported.
+type ProductCapabilities struct {
+	Median      bool
+	Mean        bool
+	Control     bool
+	Min         bool
+	Max         bool
+	Spread      bool
+	Chance      bool
+	Percentiles []int
+	Members     int
+}
+
 // RunView is the resolved, queryable view of one buffered run.
 type RunView struct {
 	Source    string

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { v2ModelsToModels, v2VarsToAvailable } from "../src/api/v2catalog.ts";
+import { availableModelID, v2ModelsToModels, v2VarsToAvailable } from "../src/api/v2catalog.ts";
 import type { V2ModelCat } from "../src/api/v2client.ts";
 
 const cat: V2ModelCat = {
@@ -142,4 +142,28 @@ test("EPS var without addressable members → no chance-of / dist", () => {
   assert.equal(t.ensemble_products?.chance_of, false);
   assert.equal(t.dist, undefined);
   assert.equal(t.members, undefined);
+});
+
+test("explicit inaccessible chance product is not inferred from member count", () => {
+  const noChance: V2ModelCat = {
+    ...cat,
+    variables: [{
+      ...cat.variables[0],
+      products: { ...cat.variables[0].products!, chance: false },
+    }],
+  };
+  const [v] = v2VarsToAvailable(noChance);
+  assert.equal(v.ensemble_products?.chance_of, false);
+  assert.equal(v.dist, undefined);
+});
+
+test("availableModelID never retains or creates a model absent from the catalog", () => {
+  const cats = [
+    { ...cat, id: "icond2" },
+    { ...cat, id: "iconeu" },
+  ];
+  assert.equal(availableModelID(cats, "iconeu"), "iconeu");
+  assert.equal(availableModelID(cats, "does-not-exist"), "icond2");
+  assert.equal(availableModelID([], "auto"), "");
+  assert.equal(availableModelID([{ ...cat, id: "auto" }], "ghost"), "auto");
 });

@@ -14,7 +14,7 @@ func testResolver(bases ...string) func(string) bool {
 }
 
 func TestParseVarID(t *testing.T) {
-	res := testResolver("t_2m", "u_10m", "tot_prec", "t_850hpa", "wind_speed_10m", "vmax_10m")
+	res := testResolver("t_2m", "u_10m", "tot_prec", "t_850hpa", "wind_speed_10m", "vmax_10m", "wind_gust_10m", "global_rad")
 
 	cases := []struct {
 		id      string
@@ -37,6 +37,8 @@ func TestParseVarID(t *testing.T) {
 		{id: "tot_prec_gt2p5mm", base: "tot_prec", exceed: 2.5},
 		{id: "t_2m_lt0c", base: "t_2m", exceed: 273.15, below: true},
 		{id: "vmax_10m_gtbft8", base: "vmax_10m", exceed: 17.0},
+		{id: "wind_gust_10m_gt1ms", base: "wind_gust_10m", exceed: 1.0},
+		{id: "global_rad_gt100w", base: "global_rad", exceed: 100.0},
 		{id: "t_2m__24h_max", base: "t_2m", winH: 24, winOp: "max", exceed: math.NaN()},
 		{id: "tot_prec_gt1mm__24h", base: "tot_prec", exceed: 1.0, winH: 24, winOp: "max"},
 		{id: "t_2m_p90__6h_max[f]", base: "t_2m", product: "p90", winH: 6, winOp: "max", unit: "f", exceed: math.NaN()},

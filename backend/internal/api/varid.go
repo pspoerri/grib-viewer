@@ -79,7 +79,7 @@ func parseVarID(id string, resolvable func(base string) bool) (*varRequest, erro
 		vr.Plane.Base = s
 	default:
 		if m := exceedRe.FindStringSubmatch(s); m != nil && resolvable(m[1]) {
-			f, ok := vars.Lookup(m[1])
+			f, ok := vars.Lookup(engine.NormBase(m[1]))
 			if !ok {
 				f = vars.Generic(m[1])
 			}
@@ -112,7 +112,7 @@ func parseVarID(id string, resolvable func(base string) bool) (*varRequest, erro
 		vr.WinOp = "max" // exceed peak: documented lower bound (spec 03)
 	}
 
-	f, ok := vars.Lookup(vr.Plane.Base)
+	f, ok := vars.Lookup(engine.NormBase(vr.Plane.Base))
 	if !ok {
 		f = vars.Generic(vr.Plane.Base)
 	}

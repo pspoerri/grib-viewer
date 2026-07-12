@@ -17,7 +17,7 @@ import {
   fetchServerPresets,
   type V2ModelCat,
 } from "./api/v2client";
-import { v2ModelsToModels, v2VarsToAvailable } from "./api/v2catalog";
+import { availableModelID, v2ModelsToModels, v2VarsToAvailable } from "./api/v2catalog";
 import { setModelCatalog } from "./api/modelInfo";
 import { v2WeatherStyle } from "./api/v2style";
 import type { MapLayer, DisplayMode, MapConfig, MapView } from "./api/mapConfig";
@@ -122,6 +122,7 @@ export default function App() {
 
   const [models, setModels] = useState<Model[]>([]);
   const [v2cat, setV2cat] = useState<V2ModelCat[]>([]);
+  const [catalogLoaded, setCatalogLoaded] = useState(false);
   const [selectedModel, setSelectedModel] = useState(
     initialHash.current?.model ?? "auto", // default to the composite (best-resolution)
   );
@@ -586,21 +587,28 @@ export default function App() {
       .then((cat) => {
         if (ctrl.signal.aborted) return;
         setV2cat(cat);
+        setCatalogLoaded(true);
         const ms = v2ModelsToModels(cat);
         setModelCatalog(ms);
         setModels(ms);
-        if (cat.length > 0 && !selectedModel) {
-          const dm = cat.find((m) => m.id === "icond2") ?? cat[0];
-          setSelectedModel(dm.id);
-        }
+        setSelectedModel((current) => availableModelID(cat, current));
       })
       .catch((err) => {
         if (ctrl.signal.aborted) return;
         console.error(err);
       });
     return () => ctrl.abort();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Popstate/deep links can inject a model after the initial fetch. Never keep
+  // a selection that the authoritative server catalog does not expose.
+  useEffect(() => {
+    if (!catalogLoaded) return;
+    const next = availableModelID(v2cat, selectedModel);
+    if (next === selectedModel) return;
+    setSelectedModel(next);
+    setSelectedRun("");
+  }, [catalogLoaded, v2cat, selectedModel]);
 
   // ---- Buffered runs for the selected model (GET /runs, newest first) ----
   // Feeds the run selector + the RunBrowser panel. Composites have no runs
@@ -647,8 +655,8 @@ export default function App() {
   // ---- Available variables derived from the v2 catalog ----
   // v2's /models response carries every variable per model, so the
   // per-variable catalog is a pure derivation (no extra fetch). Composite
-  // routing is hidden in v2, so the EPS-target + per-model maps collapse
-  // to the single selected model.
+  // layers may route to either auto flavor, so retain both catalogs—but only
+  // when each model is actually present in the server response.
   useEffect(() => {
     if (!selectedModel) {
       setAvailableVariables([]);
@@ -656,11 +664,21 @@ export default function App() {
       setVariablesByModel(new Map());
       return;
     }
-    const cat = v2cat.find((m) => m.id === selectedModel);
-    const vars = cat ? v2VarsToAvailable(cat) : [];
+    const selected = v2cat.find((m) => m.id === selectedModel);
+    const vars = selected ? v2VarsToAvailable(selected) : [];
     setAvailableVariables(vars);
-    setEpsTargetVariables(vars);
-    setVariablesByModel(new Map([[selectedModel, vars]]));
+    if (isCompositeModel(selectedModel)) {
+      const byModel = new Map<string, AvailableVariable[]>();
+      for (const id of ["auto", "auto_eps"]) {
+        const cat = v2cat.find((m) => m.id === id);
+        if (cat) byModel.set(id, v2VarsToAvailable(cat));
+      }
+      setEpsTargetVariables(byModel.get("auto_eps") ?? []);
+      setVariablesByModel(byModel);
+    } else {
+      setEpsTargetVariables(vars);
+      setVariablesByModel(new Map([[selectedModel, vars]]));
+    }
   }, [selectedModel, v2cat]);
 
   // ---- Load weather style (driven by first visible layer) ----
@@ -1051,6 +1069,10 @@ export default function App() {
     () => models.find((m) => m.id === selectedModel)?.variables ?? [],
     [models, selectedModel],
   );
+  const compositePairAvailable = useMemo(
+    () => models.some((m) => m.id === "auto") && models.some((m) => m.id === "auto_eps"),
+    [models],
+  );
 
   const pointVars = useMemo(() => {
     const vis = visibleVariables(layers);
@@ -1234,13 +1256,15 @@ export default function App() {
             isCompositeModel(selectedModel) ? epsTargetVariables : undefined
           }
           variablesByModel={variablesByModel}
-          compositeEps={compositeEpsState(selectedModel)}
+          compositeEps={compositePairAvailable ? compositeEpsState(selectedModel) : undefined}
           onMasterMode={(mode) => {
             // Master DET|EPS switch: composite-only. Flip the composite
             // default AND bulk-apply the mode to every visible tile layer
             // (Decision 4) — discarding prior per-layer overrides.
             if (!isCompositeModel(selectedModel)) return;
-            handleModelChange(compositeModelForEps(mode === "eps"));
+            const target = compositeModelForEps(mode === "eps");
+            if (!models.some((m) => m.id === target)) return;
+            handleModelChange(target);
             setLayers((ls) => bulkApplyMode(ls, mode));
           }}
         />

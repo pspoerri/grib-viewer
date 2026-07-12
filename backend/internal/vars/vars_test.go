@@ -279,6 +279,19 @@ func TestParseThresholdTail(t *testing.T) {
 	}
 }
 
+func TestSupportsThreshold(t *testing.T) {
+	for _, units := range []string{"K", "m s-1", "mm", "kg m-2", "Pa", "W m-2"} {
+		if !SupportsThreshold(units) {
+			t.Errorf("SupportsThreshold(%q) = false", units)
+		}
+	}
+	for _, units := range []string{"%", "J kg-1", "degree"} {
+		if SupportsThreshold(units) {
+			t.Errorf("SupportsThreshold(%q) = true", units)
+		}
+	}
+}
+
 func TestBeaufortTable(t *testing.T) {
 	if len(BeaufortMS) != 13 {
 		t.Fatalf("BeaufortMS has %d entries, want 13", len(BeaufortMS))

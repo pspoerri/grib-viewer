@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef } from "react";
 import type { WeatherStyle } from "../api/types";
-import { splitEnsembleVar, AUTO_MODEL_ID, AUTO_EPS_MODEL_ID } from "../api/types";
+import { splitEnsembleVar, AUTO_MODEL_ID, AUTO_EPS_MODEL_ID, isCompositeModel } from "../api/types";
 import type { MapLayer } from "../api/mapConfig";
 import {
   DIST_LABELS,
@@ -439,16 +439,18 @@ export default function MapLegend({
   // `selectedModel`. Fall back to the legacy single-catalog inputs
   // (`epsTargetVariables` for the eps side, `varInfo` for both) so an older
   // wiring / physical EPS model doesn't regress.
-  const isComposite = compositeEps !== undefined;
+  const isComposite = isCompositeModel(selectedModel);
   const detCatalog = useMemo(() => {
     const key = isComposite ? AUTO_MODEL_ID : selectedModel;
     const list = variablesByModel?.get(key);
+    if (isComposite) return new Map((list ?? []).map((v) => [v.name, v]));
     if (list && list.length > 0) return new Map(list.map((v) => [v.name, v]));
     return varInfo;
   }, [variablesByModel, isComposite, selectedModel, varInfo]);
   const epsCatalog = useMemo(() => {
     const key = isComposite ? AUTO_EPS_MODEL_ID : selectedModel;
     const list = variablesByModel?.get(key);
+    if (isComposite) return new Map((list ?? []).map((v) => [v.name, v]));
     if (list && list.length > 0) return new Map(list.map((v) => [v.name, v]));
     if (epsTargetVariables && epsTargetVariables.length > 0) {
       return new Map(epsTargetVariables.map((v) => [v.name, v]));

@@ -35,6 +35,7 @@ const registry = new Map<string, ModelInfo>();
 
 /** Ingest the /api/models catalog (App calls this when models load). */
 export function setModelCatalog(models: Model[]): void {
+  registry.clear();
   for (const m of models) {
     registry.set(m.id, {
       name: m.name || m.id,

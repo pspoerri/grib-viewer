@@ -39,6 +39,42 @@ func TestSaveLoadRunLocalPathSurvivesMove(t *testing.T) {
 	}
 }
 
+func TestSaveNormalizesWorkingDirectoryRelativeRunLocalPath(t *testing.T) {
+	oldWD, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	root := t.TempDir()
+	if err := os.Chdir(root); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chdir(oldWD) })
+
+	runDir := filepath.Join("data", "model", "runs", "run")
+	if err := os.MkdirAll(runDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	file := filepath.Join(runDir, "field.grib2")
+	if err := os.WriteFile(file, []byte("GRIB"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := Save(runDir, &RunIndex{Files: []FileEntry{{Path: file}}}); err != nil {
+		t.Fatal(err)
+	}
+
+	raw, err := os.ReadFile(filepath.Join(runDir, IndexFile))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var doc RunIndex
+	if err := json.Unmarshal(raw, &doc); err != nil {
+		t.Fatal(err)
+	}
+	if got := doc.Files[0].Path; got != "field.grib2" {
+		t.Fatalf("saved Path = %q, want run-local filename", got)
+	}
+}
+
 func TestLoadRecoversLegacyAbsoluteRunLocalPath(t *testing.T) {
 	runDir := t.TempDir()
 	file := filepath.Join(runDir, "field.grib2")
@@ -46,6 +82,30 @@ func TestLoadRecoversLegacyAbsoluteRunLocalPath(t *testing.T) {
 		t.Fatal(err)
 	}
 	doc := RunIndex{Files: []FileEntry{{Path: filepath.Join("/old/data/run", filepath.Base(file))}}}
+	raw, err := json.Marshal(&doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(runDir, IndexFile), raw, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := Load(runDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Files[0].Path != file {
+		t.Fatalf("Path = %q, want %q", got.Files[0].Path, file)
+	}
+}
+
+func TestLoadRecoversLegacyWorkingDirectoryRelativePath(t *testing.T) {
+	runDir := t.TempDir()
+	file := filepath.Join(runDir, "field.grib2")
+	if err := os.WriteFile(file, []byte("GRIB"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	doc := RunIndex{Files: []FileEntry{{Path: filepath.Join("data", "model", "runs", "run", filepath.Base(file))}}}
 	raw, err := json.Marshal(&doc)
 	if err != nil {
 		t.Fatal(err)

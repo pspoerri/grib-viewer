@@ -208,11 +208,18 @@ func Save(dir string, ri *RunIndex) error {
 	// directory remains usable when the repository or data root is moved.
 	doc := *ri
 	doc.Files = append([]FileEntry(nil), ri.Files...)
+	absDir, absDirErr := filepath.Abs(dir)
 	for i := range doc.Files {
-		if !filepath.IsAbs(doc.Files[i].Path) {
+		path := doc.Files[i].Path
+		absPath := path
+		var err error
+		if !filepath.IsAbs(absPath) {
+			absPath, err = filepath.Abs(absPath)
+		}
+		if err != nil || absDirErr != nil {
 			continue
 		}
-		rel, err := filepath.Rel(dir, doc.Files[i].Path)
+		rel, err := filepath.Rel(absDir, absPath)
 		if err == nil && rel != "." && filepath.IsLocal(rel) {
 			doc.Files[i].Path = rel
 		}
@@ -297,7 +304,22 @@ func Load(dir string) (*RunIndex, error) {
 			if !filepath.IsLocal(path) {
 				return nil, fmt.Errorf("%s/%s: non-local file path %q", dir, IndexFile, path)
 			}
-			ri.Files[i].Path = filepath.Join(dir, path)
+			candidate := filepath.Join(dir, path)
+			if st, err := os.Stat(candidate); err == nil && !st.IsDir() {
+				ri.Files[i].Path = candidate
+				continue
+			}
+			// Compatibility with early relative indexes, which stored a path
+			// relative to the process working directory (for example
+			// data/{source}/runs/{run}/field.grib2). The file itself is still
+			// run-local, so recover it by basename just like relocated legacy
+			// absolute paths below.
+			runLocal := filepath.Join(dir, filepath.Base(path))
+			if st, err := os.Stat(runLocal); err == nil && !st.IsDir() {
+				ri.Files[i].Path = runLocal
+				continue
+			}
+			ri.Files[i].Path = candidate
 			continue
 		}
 		if _, err := os.Stat(path); err == nil || !os.IsNotExist(err) {

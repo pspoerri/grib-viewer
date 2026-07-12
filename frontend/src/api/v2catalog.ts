@@ -142,6 +142,18 @@ export function v2ModelsToModels(cats: V2ModelCat[]): Model[] {
   }));
 }
 
+/** Keep a model id only when the loaded catalog exposes it. Stale/deep-linked
+ * ids fall back to the best real option; an empty catalog yields no model. */
+export function availableModelID(cats: V2ModelCat[], current: string): string {
+  if (current && cats.some((c) => c.id === current)) return current;
+  return (
+    cats.find((c) => c.id === "auto")?.id ??
+    cats.find((c) => c.id === "icond2")?.id ??
+    cats[0]?.id ??
+    ""
+  );
+}
+
 /** Windowed-aggregation ops. The catalog now advertises them per variable
  *  (`aggregations: {default, valid}`); the heuristic below remains as the
  *  fallback vocabulary when a catalog entry omits them:
@@ -176,6 +188,7 @@ function aggsFor(v: V2VarCat): { ops: string[]; default: string } | undefined {
 
 function toAvailable(v: V2VarCat): AvailableVariable {
   const members = v.products?.members ?? 0;
+  const chance = v.eps && (v.products?.chance ?? members > 0);
   return {
     name: v.name,
     long_name: v.long_name,
@@ -202,7 +215,7 @@ function toAvailable(v: V2VarCat): AvailableVariable {
     // slider's domain + the threshold-id grammar. Addressable members
     // imply per-member exceedance server-side.
     dist:
-      v.eps && members > 0
+      chance
         ? { units: v.units, min: v.vmin, max: v.vmax, member_count: members }
         : undefined,
     // Ensemble products the run actually backs, straight from the catalog's
@@ -216,7 +229,7 @@ function toAvailable(v: V2VarCat): AvailableVariable {
           min: v.products?.min ?? false,
           max: v.products?.max ?? false,
           spread: v.products?.spread ?? false,
-          chance_of: members > 0,
+          chance_of: chance,
         }
       : undefined,
   };

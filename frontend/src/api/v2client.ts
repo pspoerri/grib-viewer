@@ -18,6 +18,8 @@ export interface V2VarProducts {
   min: boolean;
   max: boolean;
   spread: boolean;
+  /** Member-wise threshold probability is actually servable. */
+  chance?: boolean;
   percentiles?: number[];
   /** Individually addressable ensemble members (`_m{N}`); 0/absent = none. */
   members?: number;

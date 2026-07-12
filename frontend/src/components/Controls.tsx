@@ -672,12 +672,14 @@ function LayerList({
   const detCatalog = useMemo(() => {
     const key = composite ? AUTO_MODEL_ID : selectedModel;
     const list = variablesByModel?.get(key);
+    if (composite) return new Map((list ?? []).map((v) => [v.name, v]));
     if (list && list.length > 0) return new Map(list.map((v) => [v.name, v]));
     return fallbackCatalog;
   }, [variablesByModel, composite, selectedModel, fallbackCatalog]);
   const epsCatalog = useMemo(() => {
     const key = composite ? AUTO_EPS_MODEL_ID : selectedModel;
     const list = variablesByModel?.get(key);
+    if (composite) return new Map((list ?? []).map((v) => [v.name, v]));
     if (list && list.length > 0) return new Map(list.map((v) => [v.name, v]));
     return fallbackCatalog;
   }, [variablesByModel, composite, selectedModel, fallbackCatalog]);

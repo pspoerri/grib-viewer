@@ -62,6 +62,17 @@ func (e *Engine) derivedPlane(rv *runView, spec PlaneSpec, valid time.Time, reg 
 // fold applies the requested product/exceedance over member planes,
 // guarding non-trivial products on deterministic inputs.
 func (e *Engine) fold(rv *runView, spec PlaneSpec, members [][]float32, inputs []string) ([]float32, error) {
+	if spec.Product == "ctrl" {
+		for _, in := range inputs {
+			if vi := rv.Vars[in]; vi == nil || !vi.HasControl {
+				return nil, fmt.Errorf("%w: no control member", ErrNoProduct)
+			}
+		}
+		// memberPlanes is sorted by member number, so a present member 0 is
+		// first. Return the derived control plane rather than asking the
+		// statistical reducer (which intentionally has no "ctrl" operation).
+		return members[0], nil
+	}
 	det := false
 	for _, in := range inputs {
 		if vi := rv.Vars[in]; vi != nil && vi.Members == 0 {

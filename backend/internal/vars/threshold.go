@@ -40,6 +40,17 @@ var thresholdUnitTokens = map[string]struct {
 // (unit letters before the number, e.g. "bft8").
 var thresholdUnitPrefixes = []string{"bft"}
 
+// SupportsThreshold reports whether the HTTP variable-id grammar can express
+// an exceedance threshold for a field in siUnits.
+func SupportsThreshold(siUnits string) bool {
+	for _, token := range thresholdUnitTokens {
+		if token.si[siUnits] {
+			return true
+		}
+	}
+	return false
+}
+
 // ParseThresholdTail parses an exceedance threshold token — the tail
 // after `_gt`/`_lt` in ids like tot_prec_gt2p5mm (spec 03) — and
 // returns the threshold in the variable's SI units.

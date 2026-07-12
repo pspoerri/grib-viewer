@@ -26,7 +26,7 @@ func controlTestView(vars map[string][][]int) *runView {
 	return buildView("test", "latest", ri)
 }
 
-func TestControlForRequiresMemberZeroAtEveryStep(t *testing.T) {
+func TestProductsForRequiresMemberZeroAtEveryStepForControl(t *testing.T) {
 	tests := []struct {
 		name string
 		vars map[string][][]int
@@ -41,9 +41,46 @@ func TestControlForRequiresMemberZeroAtEveryStep(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := controlFor(controlTestView(tt.vars), tt.base); got != tt.want {
-				t.Fatalf("controlFor(%q) = %v, want %v", tt.base, got, tt.want)
+			if got := productsFor(controlTestView(tt.vars), tt.base).Control; got != tt.want {
+				t.Fatalf("productsFor(%q).Control = %v, want %v", tt.base, got, tt.want)
 			}
 		})
+	}
+}
+
+func TestProductsForMatchesDerivedProductSupport(t *testing.T) {
+	rv := controlTestView(map[string][][]int{
+		"u_10m": {{0, 1}}, "v_10m": {{0, 1}},
+		"t_2m": {{0, 1}}, "td_2m": {{0, 1}},
+	})
+
+	wind := productsFor(rv, "wind_speed_10m")
+	if !wind.Max || !wind.Spread || !wind.Chance || !wind.Control {
+		t.Fatalf("wind products = %+v, want max/spread/chance/control", wind)
+	}
+	direction := productsFor(rv, "wind_dir_10m")
+	if !direction.Median || direction.Max || direction.Spread || direction.Chance || direction.Control {
+		t.Fatalf("wind direction products = %+v, want median only", direction)
+	}
+	rh := productsFor(rv, "relhum_2m")
+	if !rh.Max || !rh.Control || rh.Spread || rh.Chance {
+		t.Fatalf("relative humidity products = %+v, want extrema/control but no spread/chance", rh)
+	}
+}
+
+func TestFoldServesDerivedControlMember(t *testing.T) {
+	rv := &runView{RunView: RunView{Vars: map[string]*VarInfo{
+		"u_10m": {HasControl: true}, "v_10m": {HasControl: true},
+	}}}
+	got, err := (&Engine{}).fold(rv, PlaneSpec{Product: "ctrl"}, [][]float32{{7}, {9}}, []string{"u_10m", "v_10m"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got[0] != 7 {
+		t.Fatalf("derived control = %v, want member 0 plane", got)
+	}
+	rv.Vars["v_10m"].HasControl = false
+	if _, err := (&Engine{}).fold(rv, PlaneSpec{Product: "ctrl"}, [][]float32{{7}, {9}}, []string{"u_10m", "v_10m"}); err == nil {
+		t.Fatal("missing component control: want error")
 	}
 }

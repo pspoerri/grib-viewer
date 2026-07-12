@@ -38,6 +38,7 @@ type productsDTO struct {
 	Min         bool  `json:"min"`
 	Max         bool  `json:"max"`
 	Spread      bool  `json:"spread"`
+	Chance      bool  `json:"chance"`
 	Percentiles []int `json:"percentiles,omitempty"`
 	Members     int   `json:"members,omitempty"`
 }
@@ -119,23 +120,26 @@ func temporalName(t vars.Temporal) string {
 	}
 }
 
-func (s *Server) varDTOFor(source, run, name string, members, steps int) varDTO {
+func (s *Server) varDTOFor(source, run, name string, steps int) varDTO {
 	f, ok := vars.Lookup(engine.NormBase(name))
 	if !ok {
 		f = vars.Generic(name)
 	}
-	eps := members > 0
+	caps := s.Engine.ProductsFor(source, run, name)
+	eps := caps.Members > 0
 	dto := varDTO{
 		Name: name, Units: f.Units, LongName: f.LongName,
 		Colormap: f.Colormap, VMin: f.VMin, VMax: f.VMax,
 		EPS: eps, Temporal: temporalName(f.Temporal),
 		Agg: aggFor(f.Reducer), Steps: steps,
 	}
-	dto.Products = productsDTO{Median: true}
+	dto.Products = productsDTO{Median: caps.Median}
 	if eps {
 		dto.Products = productsDTO{
-			Median: true, Mean: true, Control: s.Engine.ControlFor(source, run, name), Min: true, Max: true,
-			Spread: true, Percentiles: []int{10, 25, 50, 75, 90}, Members: members,
+			Median: caps.Median, Mean: caps.Mean, Control: caps.Control,
+			Min: caps.Min, Max: caps.Max, Spread: caps.Spread,
+			Chance:      caps.Chance && vars.SupportsThreshold(f.Units),
+			Percentiles: caps.Percentiles, Members: caps.Members,
 		}
 	}
 	return dto
@@ -176,12 +180,18 @@ func (s *Server) modelDTO(id string) (*modelDTO, error) {
 			continue
 		}
 		seen[n] = true
-		members := s.Engine.MembersFor(id, info.RunID, n)
 		steps := 0
 		if st, err := s.Engine.StepsFor(id, info.RunID, n); err == nil {
 			steps = len(st)
 		}
-		md.Variables = append(md.Variables, s.varDTOFor(id, info.RunID, n, members, steps))
+		v := s.varDTOFor(id, info.RunID, n, steps)
+		if !v.Products.Median {
+			continue
+		}
+		md.Variables = append(md.Variables, v)
+	}
+	if len(md.Variables) == 0 {
+		return nil, fmt.Errorf("model %s has no servable variables", id)
 	}
 	return md, nil
 }
@@ -431,7 +441,7 @@ func (s *Server) parseDataReq(w http.ResponseWriter, r *http.Request, singleFram
 			writeErr(w, 404, err.Error())
 			return nil
 		}
-		model, err = s.resolveModel(model, vr.Plane.Base)
+		model, err = s.resolveModelForPlane(model, vr.Plane)
 		if err != nil {
 			writeErr(w, 404, err.Error())
 			return nil
@@ -794,11 +804,11 @@ func (s *Server) handleComposite(w http.ResponseWriter, r *http.Request) {
 		if err != nil || info.Synthetic {
 			continue
 		}
-		if id == "auto_eps" && s.Engine.MembersFor(src.ID, info.RunID, headlineVar(info)) == 0 {
+		name := s.servableHeadline(src.ID, info)
+		if name == "" {
 			continue
 		}
-		name := headlineVar(info)
-		if name == "" {
+		if id == "auto_eps" && s.Engine.ProductsFor(src.ID, info.RunID, name).Members == 0 {
 			continue
 		}
 		deg, err := s.Engine.NativeDeg(src.ID, info.RunID, name)
@@ -830,12 +840,12 @@ func (s *Server) handleComposite(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func headlineVar(info *engine.RunView) string {
-	if _, ok := info.Vars["t_2m"]; ok {
+func (s *Server) servableHeadline(source string, info *engine.RunView) string {
+	if _, ok := info.Vars["t_2m"]; ok && s.Engine.ProductsFor(source, info.RunID, "t_2m").Median {
 		return "t_2m"
 	}
 	for n := range info.Vars {
-		if !hiddenVars[n] {
+		if !hiddenVars[n] && s.Engine.ProductsFor(source, info.RunID, n).Median {
 			return n
 		}
 	}

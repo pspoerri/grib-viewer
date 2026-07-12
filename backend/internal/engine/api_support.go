@@ -102,46 +102,83 @@ func (e *Engine) MembersFor(source, run, base string) int {
 	return vi.Members
 }
 
-// ControlFor reports whether member 0 backs every input plane and valid time
-// needed by a raw or derived variable. Member 1 is a perturbed member, not a
-// substitute control, on sources such as DWD ICON-EPS.
-func (e *Engine) ControlFor(source, run, base string) bool {
+// ProductsFor returns the products this run can actually serve for base.
+func (e *Engine) ProductsFor(source, run, base string) ProductCapabilities {
 	rv, err := e.View(source, run)
 	if err != nil {
-		return false
+		return ProductCapabilities{}
 	}
-	return controlFor(rv, base)
+	return productsFor(rv, base)
 }
 
-func controlFor(rv *runView, base string) bool {
+type productFamily uint8
+
+const (
+	productFull productFamily = iota
+	productRelativeHumidity
+	productWindDirection
+)
+
+// productInputs mirrors derivedPlane dispatch. Derived ids deliberately take
+// precedence over a same-named raw plane because that is how rendering routes.
+func productInputs(rv *runView, base string) ([]string, productFamily) {
 	base = NormBase(base)
-	var names []string
-	if _, ok := rv.planes[base]; ok {
-		names = []string{base}
-	} else {
-		switch {
-		case precipRe.MatchString(base):
-			names = []string{"tot_prec"}
-		case base == "ghi":
-			names = []string{"aswdifd_s", "aswdir_s"}
-		case base == "relhum_2m":
-			names = []string{"t_2m", "td_2m"}
-		case base == "wind_dir_10m":
-			names = []string{"u_10m", "v_10m"}
-		case windRe.MatchString(base):
-			lvl := windRe.FindStringSubmatch(base)[1]
-			names = []string{"u_" + lvl, "v_" + lvl}
-		default:
-			return false
-		}
+	switch {
+	case precipRe.MatchString(base):
+		return []string{"tot_prec"}, productFull
+	case base == "ghi":
+		return []string{"aswdifd_s", "aswdir_s"}, productFull
+	case base == "relhum_2m":
+		return []string{"t_2m", "td_2m"}, productRelativeHumidity
+	case base == "wind_dir_10m":
+		return []string{"u_10m", "v_10m"}, productWindDirection
+	case windRe.MatchString(base):
+		lvl := windRe.FindStringSubmatch(base)[1]
+		return []string{"u_" + lvl, "v_" + lvl}, productFull
+	case rv.planes[base] != nil:
+		return []string{base}, productFull
+	default:
+		return nil, productFull
 	}
+}
+
+func productsFor(rv *runView, base string) ProductCapabilities {
+	names, family := productInputs(rv, base)
+	if len(names) == 0 {
+		return ProductCapabilities{}
+	}
+	caps := ProductCapabilities{Median: true}
+	members := 0
+	hasControl := true
 	for _, name := range names {
 		vi, ok := rv.Vars[name]
-		if !ok || !vi.HasControl {
-			return false
+		if !ok {
+			return ProductCapabilities{}
 		}
+		if vi.Members == 0 {
+			members = 0
+			hasControl = false
+			break
+		}
+		if members == 0 || vi.Members < members {
+			members = vi.Members
+		}
+		hasControl = hasControl && vi.HasControl
 	}
-	return len(names) > 0
+	caps.Members = members
+	if members == 0 || family == productWindDirection {
+		return caps
+	}
+	caps.Mean = true
+	caps.Control = hasControl
+	caps.Min = true
+	caps.Max = true
+	caps.Percentiles = []int{10, 25, 50, 75, 90}
+	if family == productFull {
+		caps.Spread = true
+		caps.Chance = true
+	}
+	return caps
 }
 
 // NativeDeg exposes grid-spacing estimation to the api layer.
