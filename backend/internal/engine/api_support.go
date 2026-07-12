@@ -102,6 +102,48 @@ func (e *Engine) MembersFor(source, run, base string) int {
 	return vi.Members
 }
 
+// ControlFor reports whether member 0 backs every input plane and valid time
+// needed by a raw or derived variable. Member 1 is a perturbed member, not a
+// substitute control, on sources such as DWD ICON-EPS.
+func (e *Engine) ControlFor(source, run, base string) bool {
+	rv, err := e.View(source, run)
+	if err != nil {
+		return false
+	}
+	return controlFor(rv, base)
+}
+
+func controlFor(rv *runView, base string) bool {
+	base = NormBase(base)
+	var names []string
+	if _, ok := rv.planes[base]; ok {
+		names = []string{base}
+	} else {
+		switch {
+		case precipRe.MatchString(base):
+			names = []string{"tot_prec"}
+		case base == "ghi":
+			names = []string{"aswdifd_s", "aswdir_s"}
+		case base == "relhum_2m":
+			names = []string{"t_2m", "td_2m"}
+		case base == "wind_dir_10m":
+			names = []string{"u_10m", "v_10m"}
+		case windRe.MatchString(base):
+			lvl := windRe.FindStringSubmatch(base)[1]
+			names = []string{"u_" + lvl, "v_" + lvl}
+		default:
+			return false
+		}
+	}
+	for _, name := range names {
+		vi, ok := rv.Vars[name]
+		if !ok || !vi.HasControl {
+			return false
+		}
+	}
+	return len(names) > 0
+}
+
 // NativeDeg exposes grid-spacing estimation to the api layer.
 func (e *Engine) NativeDeg(source, run, base string) (float64, error) {
 	rv, err := e.View(source, run)

@@ -47,11 +47,12 @@ type Window struct {
 
 // VarInfo describes one servable variable of a run (catalog row).
 type VarInfo struct {
-	Name      string
-	Steps     []time.Time // sorted valid times
-	Members   int         // 0 = deterministic, else member count (incl. control)
-	LevelType uint8
-	Level     int
+	Name       string
+	Steps      []time.Time // sorted valid times
+	Members    int         // 0 = deterministic, else member count (incl. control)
+	HasControl bool        // member 0 exists at every valid time
+	LevelType  uint8
+	Level      int
 }
 
 // RunView is the resolved, queryable view of one buffered run.

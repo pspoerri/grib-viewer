@@ -9,6 +9,7 @@ import {
   PICKER_SEGMENTS,
   segmentEnabled,
   masterIndicatorEps,
+  unavailableProductPatch,
   type LayerGate,
   type PickerProduct,
 } from "../src/lib/layerProductGate.ts";
@@ -157,6 +158,26 @@ test("physical model: Det suppressed (no det/eps split), EPS products as before"
   const segs = enabledSegments(g);
   assert.ok(!segs.includes("det"), "physical model: Det segment not in enabled set");
   assert.ok(segs.includes("med"), "physical model: Med segment enabled");
+});
+
+test("bookmarked control falls back to median when control is unavailable", () => {
+  const withoutControl = { ...full, control: false };
+  const cat = catalog(mkVar("vmax_10m", "m s-1", withoutControl));
+  const layer = mkLayer("vmax_10m_ctrl", "eps");
+  const gate = gateOptions(layer, cat, cat, "iconepsglobal");
+  assert.ok(gate);
+  assert.deepEqual(unavailableProductPatch(layer, "iconepsglobal", gate), {
+    ensembleMode: "eps",
+    variable: "wind_gust_10m",
+  });
+});
+
+test("bookmarked control is retained when member zero is available", () => {
+  const cat = catalog(mkVar("vmax_10m", "m s-1", full));
+  const layer = mkLayer("vmax_10m_ctrl", "eps");
+  const gate = gateOptions(layer, cat, cat, "iconch2eps");
+  assert.ok(gate);
+  assert.equal(unavailableProductPatch(layer, "iconch2eps", gate), null);
 });
 
 // --- productPatch ----------------------------------------------------------

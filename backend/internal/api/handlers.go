@@ -134,7 +134,7 @@ func (s *Server) varDTOFor(source, run, name string, members, steps int) varDTO 
 	dto.Products = productsDTO{Median: true}
 	if eps {
 		dto.Products = productsDTO{
-			Median: true, Mean: true, Control: true, Min: true, Max: true,
+			Median: true, Mean: true, Control: s.Engine.ControlFor(source, run, name), Min: true, Max: true,
 			Spread: true, Percentiles: []int{10, 25, 50, 75, 90}, Members: members,
 		}
 	}

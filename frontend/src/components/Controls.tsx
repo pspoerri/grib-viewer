@@ -47,6 +47,7 @@ import {
   effectiveLayerMode,
   PICKER_SEGMENTS,
   segmentEnabled,
+  unavailableProductPatch,
 } from "../lib/layerProductGate";
 import type { LayerGate, PickerProduct } from "../lib/layerProductGate";
 
@@ -694,6 +695,19 @@ function LayerList({
     }
     return m;
   }, [layers, detCatalog, epsCatalog, selectedModel]);
+
+  // Catalogs can invalidate a product stored in an old URL (for example DWD
+  // ICON-EPS `_ctrl`, whose members are 1..40 with no member 0). Normalize it
+  // once catalogs arrive so the layer renders instead of repeatedly 404ing.
+  useEffect(() => {
+    for (const layer of layers) {
+      if (!layer.visible) continue;
+      const gate = gatesByLayerId.get(layer.id);
+      if (!gate) continue;
+      const patch = unavailableProductPatch(layer, selectedModel, gate);
+      if (patch) onLayerUpdate(layer.id, patch);
+    }
+  }, [layers, gatesByLayerId, selectedModel, onLayerUpdate]);
 
   if (layers.length === 0) {
     return (

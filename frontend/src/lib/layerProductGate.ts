@@ -16,7 +16,7 @@ import {
   strippedBase,
 } from "../api/mapConfig.ts";
 import type { MapLayer } from "../api/mapConfig.ts";
-import { applyProduct, productApplicable } from "../api/products.ts";
+import { applyProduct, currentProduct, productApplicable } from "../api/products.ts";
 import type { Product } from "../api/products.ts";
 import { layerModel } from "./epsMode.ts";
 import { AUTO_MODEL_ID, isCompositeModel } from "../api/types.ts";
@@ -213,4 +213,22 @@ export function productPatch(
     ensembleMode: "eps",
     variable: applyProduct(productBase, product, gate.targetVar, layer.variable),
   };
+}
+
+/** Rewrite a persisted/bookmarked product that the current catalog no longer
+ * serves. Prefer the ensemble median, then deterministic mode on composites.
+ * Returning null means the current product is valid or no safe fallback exists. */
+export function unavailableProductPatch(
+  layer: MapLayer,
+  selectedModel: string,
+  gate: LayerGate,
+): Partial<MapLayer> | null {
+  const active: PickerProduct =
+    effectiveLayerMode(layer, selectedModel) === "det"
+      ? "det"
+      : currentProduct(layer.variable);
+  if (segmentEnabled(active, gate)) return null;
+  if (gate.medEnabled) return productPatch(layer, "med", gate);
+  if (gate.detEnabled) return productPatch(layer, "det", gate);
+  return null;
 }

@@ -295,9 +295,13 @@ func buildView(source, runID string, ri *gribidx.RunIndex) *runView {
 	for name, byTime := range rv.planes {
 		vi := rv.Vars[name]
 		maxMembers := 0
+		hasControl := len(byTime) > 0
 		steps := make([]time.Time, 0, len(byTime))
 		for ts, pm := range byTime {
 			steps = append(steps, time.Unix(ts, 0).UTC())
+			if _, ok := pm.byMember[0]; !ok {
+				hasControl = false
+			}
 			n := 0
 			for mem := range pm.byMember {
 				if mem >= 0 {
@@ -311,6 +315,7 @@ func buildView(source, runID string, ri *gribidx.RunIndex) *runView {
 		sort.Slice(steps, func(i, j int) bool { return steps[i].Before(steps[j]) })
 		vi.Steps = steps
 		vi.Members = maxMembers
+		vi.HasControl = hasControl
 	}
 	return rv
 }
