@@ -16,14 +16,15 @@ import (
 
 // Msg describes one GRIB2 field within a file.
 type Msg struct {
-	Msg       int       `json:"msg"` // message index within the file
-	Var       string    `json:"var"`
-	LevelType uint8     `json:"level_type,omitempty"`
-	Level     int       `json:"level,omitempty"` // hPa for isobaric, m/cm otherwise
-	Member    int       `json:"member"`          // -1 deterministic, 0 control, 1..N perturbed
-	Ref       time.Time `json:"ref"`
-	Valid     time.Time `json:"valid"`
-	GridTmpl  uint16    `json:"grid_tmpl"`
+	Msg          int       `json:"msg"` // message index within the file
+	Var          string    `json:"var"`
+	LevelType    uint8     `json:"level_type,omitempty"`
+	Level        int       `json:"level,omitempty"` // hPa for isobaric, m/cm otherwise
+	Member       int       `json:"member"`          // -1 deterministic, 0 control, 1..N perturbed
+	EnsembleSize int       `json:"ensemble_size,omitempty"`
+	Ref          time.Time `json:"ref"`
+	Valid        time.Time `json:"valid"`
+	GridTmpl     uint16    `json:"grid_tmpl"`
 }
 
 // FileEntry is one indexed GRIB file (path may live outside the data dir).
@@ -62,6 +63,7 @@ func ScanFile(path, varHint string) (*FileEntry, error) {
 	}
 	defer f.Close()
 	fe := &FileEntry{Path: path, Size: st.Size(), MTime: st.ModTime().Unix()}
+	declaredEnsembleSize := 0
 	for i, m := range f.Messages() {
 		h := m.Header()
 		name := varHint
@@ -71,24 +73,39 @@ func ScanFile(path, varHint string) (*FileEntry, error) {
 		if name == "" {
 			name = fmt.Sprintf("p%d_%d_%d", h.Discipline, h.ParameterCategory, h.ParameterNumber)
 		}
-		member := -1
-		switch m.S4.TemplateNumber() {
-		case 1, 11:
-			member = int(m.S4.PerturbationNumber())
+		member, ensembleSize, err := ensembleMember(h, &declaredEnsembleSize)
+		if err != nil {
+			return nil, fmt.Errorf("%s: message %d: %w", path, i, err)
 		}
 		valid := validTime(m)
 		fe.Msgs = append(fe.Msgs, Msg{
-			Msg:       i,
-			Var:       name,
-			LevelType: h.TypeOfFirstFixedSurface,
-			Level:     levelValue(h),
-			Member:    member,
-			Ref:       h.ReferenceTime,
-			Valid:     valid,
-			GridTmpl:  h.GridTemplate,
+			Msg:          i,
+			Var:          name,
+			LevelType:    h.TypeOfFirstFixedSurface,
+			Level:        levelValue(h),
+			Member:       member,
+			EnsembleSize: ensembleSize,
+			Ref:          h.ReferenceTime,
+			Valid:        valid,
+			GridTmpl:     h.GridTemplate,
 		})
 	}
 	return fe, nil
+}
+
+func ensembleMember(h grib.Header, declared *int) (member, size int, err error) {
+	if h.TypeOfEnsembleForecast == 255 {
+		return -1, 0, nil
+	}
+	size = int(h.NumberOfForecastsInEnsemble)
+	if size == 0 || size == 255 {
+		return 0, 0, fmt.Errorf("ensemble product declares invalid member count %d", size)
+	}
+	if *declared != 0 && *declared != size {
+		return 0, 0, fmt.Errorf("ensemble member count changed from %d to %d", *declared, size)
+	}
+	*declared = size
+	return int(h.PerturbationNumber), size, nil
 }
 
 // validTime computes the absolute valid time of a message. For
@@ -184,7 +201,23 @@ func wmoName(h grib.Header) string {
 const IndexFile = "index.json"
 
 func Save(dir string, ri *RunIndex) error {
-	raw, err := json.Marshal(ri)
+	if err := validateMergedEnsembles(ri.Files); err != nil {
+		return err
+	}
+	// Run-local files are persisted relative to index.json so a buffered data
+	// directory remains usable when the repository or data root is moved.
+	doc := *ri
+	doc.Files = append([]FileEntry(nil), ri.Files...)
+	for i := range doc.Files {
+		if !filepath.IsAbs(doc.Files[i].Path) {
+			continue
+		}
+		rel, err := filepath.Rel(dir, doc.Files[i].Path)
+		if err == nil && rel != "." && filepath.IsLocal(rel) {
+			doc.Files[i].Path = rel
+		}
+	}
+	raw, err := json.Marshal(&doc)
 	if err != nil {
 		return err
 	}
@@ -203,6 +236,52 @@ func Save(dir string, ri *RunIndex) error {
 	return os.Rename(tmp.Name(), filepath.Join(dir, IndexFile))
 }
 
+func validateMergedEnsembles(files []FileEntry) error {
+	type key struct {
+		variable  string
+		levelType uint8
+		level     int
+		ref       int64
+		valid     int64
+	}
+	type memberSet struct {
+		declared int
+		members  map[int]struct{}
+	}
+	sets := map[key]*memberSet{}
+	for _, file := range files {
+		for _, msg := range file.Msgs {
+			if msg.EnsembleSize == 0 { // legacy indexes have no declaration
+				continue
+			}
+			if msg.Member < 0 {
+				return fmt.Errorf("ensemble %s has deterministic member marker", msg.Var)
+			}
+			k := key{msg.Var, msg.LevelType, msg.Level, msg.Ref.Unix(), msg.Valid.Unix()}
+			set := sets[k]
+			if set == nil {
+				set = &memberSet{declared: msg.EnsembleSize, members: map[int]struct{}{}}
+				sets[k] = set
+			} else if set.declared != msg.EnsembleSize {
+				return fmt.Errorf(
+					"ensemble %s at %s declares conflicting member counts %d and %d",
+					msg.Var, msg.Valid.UTC().Format(time.RFC3339), set.declared, msg.EnsembleSize,
+				)
+			}
+			set.members[msg.Member] = struct{}{}
+		}
+	}
+	for k, set := range sets {
+		if len(set.members) != set.declared {
+			return fmt.Errorf(
+				"ensemble %s at %s has %d merged members, declared %d",
+				k.variable, time.Unix(k.valid, 0).UTC().Format(time.RFC3339), len(set.members), set.declared,
+			)
+		}
+	}
+	return nil
+}
+
 func Load(dir string) (*RunIndex, error) {
 	raw, err := os.ReadFile(filepath.Join(dir, IndexFile))
 	if err != nil {
@@ -211,6 +290,25 @@ func Load(dir string) (*RunIndex, error) {
 	var ri RunIndex
 	if err := json.Unmarshal(raw, &ri); err != nil {
 		return nil, fmt.Errorf("%s/%s: %w", dir, IndexFile, err)
+	}
+	for i := range ri.Files {
+		path := ri.Files[i].Path
+		if !filepath.IsAbs(path) {
+			if !filepath.IsLocal(path) {
+				return nil, fmt.Errorf("%s/%s: non-local file path %q", dir, IndexFile, path)
+			}
+			ri.Files[i].Path = filepath.Join(dir, path)
+			continue
+		}
+		if _, err := os.Stat(path); err == nil || !os.IsNotExist(err) {
+			continue
+		}
+		// Compatibility with indexes written before run-local paths became
+		// relative: recover a relocated file by its name in the run directory.
+		candidate := filepath.Join(dir, filepath.Base(path))
+		if st, err := os.Stat(candidate); err == nil && !st.IsDir() {
+			ri.Files[i].Path = candidate
+		}
 	}
 	return &ri, nil
 }
